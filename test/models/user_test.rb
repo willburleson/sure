@@ -1296,4 +1296,18 @@ class UserTest < ActiveSupport::TestCase
     assert token.reload.revoked_at.present?
     assert grant.reload.revoked_at.present?
   end
+
+  test "account_group_order defaults to Accountable::TYPES" do
+    @user.update!(preferences: {})
+
+    assert_equal Accountable::TYPES.map(&:underscore), @user.account_group_order
+  end
+
+  test "account_group_order drops unknown keys and appends missing types" do
+    @user.update!(preferences: { "account_group_order" => %w[credit_card bogus investment] })
+
+    order = @user.account_group_order
+    assert_equal %w[credit_card investment], order.first(2)
+    assert_equal Accountable::TYPES.map(&:underscore).sort, order.sort
+  end
 end

@@ -5,11 +5,14 @@ class BalanceSheet::ClassificationGroup
 
   attr_reader :classification, :currency
 
-  def initialize(classification:, currency:, accounts:)
+  # group_order: accountable keys (e.g. "credit_card") in display order;
+  # defaults to Accountable::TYPES.
+  def initialize(classification:, currency:, accounts:, group_order: nil)
     @classification = normalize_classification!(classification)
     @name = name
     @currency = currency
     @accounts = accounts
+    @group_order = group_order || Accountable::TYPES.map(&:underscore)
   end
 
   def name
@@ -44,17 +47,15 @@ class BalanceSheet::ClassificationGroup
                        )
                      end
 
-    # Sort the groups using the manual order defined by Accountable::TYPES so that
-    # the UI displays account groups in a predictable, domain-specific sequence.
+    # Sort the groups by the user's chosen order (Accountable::TYPES by default)
+    # so the UI displays account groups in a predictable sequence.
     groups.sort_by do |group|
-      manual_order = Accountable::TYPES
-      type_name    = group.key.camelize
-      manual_order.index(type_name) || Float::INFINITY
+      group_order.index(group.key) || Float::INFINITY
     end
   end
 
   private
-    attr_reader :accounts
+    attr_reader :accounts, :group_order
 
     def normalize_classification!(classification)
       raise ArgumentError, "Invalid classification: #{classification}" unless %w[asset liability].include?(classification)

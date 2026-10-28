@@ -47,7 +47,9 @@ module AccountsHelper
       # so toggling it in Settings busts the 12h fragment cache immediately
       # (this partial renders with skip_digest: true, so the template digest
       # would not otherwise reflect the change).
-      Current.user&.always_expanded_account_groups&.sort
+      Current.user&.always_expanded_account_groups&.sort,
+      # Same for the account group order: reordering must re-render the sidebar.
+      Current.user&.account_group_order&.join(",")
     ]
   end
 end

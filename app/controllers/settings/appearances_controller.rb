@@ -31,6 +31,12 @@ class Settings::AppearancesController < ApplicationController
         selected = (account_groups.is_a?(Array) ? account_groups : [ account_groups ])
         updated_prefs["always_expanded_account_groups"] = selected.select { |k| valid_keys.include?(k) }
       end
+      # Drag-to-reorder account groups. The sortable list posts every key in
+      # its new order; keep only known keys, once each.
+      if (group_order = params.dig(:user, :account_group_order))
+        valid_keys = Accountable::TYPES.map(&:underscore)
+        updated_prefs["account_group_order"] = Array(group_order).select { |k| valid_keys.include?(k) }.uniq
+      end
       @user.update!(preferences: updated_prefs)
     end
     redirect_to settings_appearance_path

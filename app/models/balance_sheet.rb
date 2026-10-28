@@ -14,7 +14,8 @@ class BalanceSheet
     @assets ||= ClassificationGroup.new(
       classification: "asset",
       currency: family.currency,
-      accounts: sorted(account_totals.asset_accounts)
+      accounts: sorted(account_totals.asset_accounts),
+      group_order: user&.account_group_order
     )
   end
 
@@ -22,7 +23,8 @@ class BalanceSheet
     @liabilities ||= ClassificationGroup.new(
       classification: "liability",
       currency: family.currency,
-      accounts: sorted(account_totals.liability_accounts)
+      accounts: sorted(account_totals.liability_accounts),
+      group_order: user&.account_group_order
     )
   end
 
@@ -30,8 +32,12 @@ class BalanceSheet
     [ assets, liabilities ]
   end
 
+  # Assets and liabilities together, in the user's group order (so a liability
+  # group can sit above asset groups in the combined "All" sidebar list).
   def account_groups
-    [ assets.account_groups, liabilities.account_groups ].flatten
+    groups = [ assets.account_groups, liabilities.account_groups ].flatten
+    order = user&.account_group_order
+    order ? groups.sort_by.with_index { |group, i| [ order.index(group.key) || order.size, i ] } : groups
   end
 
   def net_worth

@@ -68,6 +68,32 @@
           <% end %>
         </div>
       </div>
+
+      <div class="border-t border-primary pt-4">
+        <div class="text-sm space-y-1 mb-3">
+          <p class="text-primary font-medium"><%= t(".dashboard_account_group_order_title") %></p>
+          <p class="text-secondary"><%= t(".dashboard_account_group_order_description") %></p>
+        </div>
+        <ul class="space-y-1 sm:max-w-md" data-controller="account-group-order" role="list">
+          <% @user.account_group_order.map { |key| Accountable.from_type(key.camelize) }.each do |accountable| %>
+            <li class="flex items-center gap-2.5 rounded-lg border border-primary bg-container px-3 py-2"
+                data-account-group-order-target="item">
+              <%= hidden_field_tag "user[account_group_order][]", accountable.name.underscore, id: nil %>
+              <button type="button"
+                      class="text-secondary cursor-grab touch-none focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 rounded"
+                      aria-label="<%= t(".dashboard_account_group_order_handle", name: accountable.display_name) %>"
+                      data-action="pointerdown->account-group-order#grab keydown->account-group-order#keydown">
+                <%= icon("grip-vertical", size: "sm") %>
+              </button>
+              <span class="h-2 w-2 rounded-full shrink-0" style="background-color: <%= accountable.color %>"></span>
+              <span class="text-sm text-primary"><%= accountable.display_name %></span>
+              <span class="ml-auto text-xs text-secondary">
+                <%= t("pages.dashboard.balance_sheet.classifications.#{accountable.classification}", default: accountable.classification.titleize.pluralize) %>
+              </span>
+            </li>
+          <% end %>
+        </ul>
+      </div>
     <% end %>
   </div>
 <% end %>

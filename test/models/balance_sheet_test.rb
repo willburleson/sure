@@ -142,6 +142,44 @@ class BalanceSheetTest < ActiveSupport::TestCase
     assert_equal 3000 + 5000, liability_groups.find { |ag| ag.name == OtherLiability.display_name }.total
   end
 
+  test "account groups follow Accountable::TYPES order by default" do
+    create_account(balance: 1000, accountable: Property.new)
+    create_account(balance: 1000, accountable: Depository.new)
+    create_account(balance: 1000, accountable: Investment.new)
+
+    assert_equal %w[depository investment property], BalanceSheet.new(@family).assets.account_groups.map(&:key)
+  end
+
+  test "account groups follow a custom group order" do
+    accounts = [
+      create_account(balance: 1000, accountable: Depository.new),
+      create_account(balance: 1000, accountable: Investment.new),
+      create_account(balance: 1000, accountable: Property.new)
+    ]
+
+    group = BalanceSheet::ClassificationGroup.new(
+      classification: "asset",
+      currency: "USD",
+      accounts: accounts,
+      group_order: %w[property depository investment]
+    )
+
+    assert_equal %w[property depository investment], group.account_groups.map(&:key)
+  end
+
+  test "combined account groups follow the user's order across classifications" do
+    user = users(:empty)
+    user.update!(preferences: { "account_group_order" => %w[credit_card depository] })
+    create_account(balance: 1000, accountable: Depository.new, owner: user)
+    create_account(balance: 1000, accountable: CreditCard.new, owner: user)
+    create_account(balance: 1000, accountable: Investment.new, owner: user)
+
+    balance_sheet = BalanceSheet.new(@family, user: user)
+
+    assert_equal %w[credit_card depository investment], balance_sheet.account_groups.map(&:key)
+    assert_equal %w[depository investment], balance_sheet.assets.account_groups.map(&:key)
+  end
+
   private
     def create_account(attributes = {})
       account = @family.accounts.create! name: "Test", currency: "USD", **attributes

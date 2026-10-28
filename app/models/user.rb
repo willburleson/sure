@@ -711,6 +711,16 @@ class User < ApplicationRecord
     always_expanded_account_groups.include?(account_group_key.to_s)
   end
 
+  # Returns every accountable key (e.g. "depository", "credit_card") in the
+  # user's chosen display order for account groups on the dashboard balance
+  # sheet and sidebar. Unknown stored keys are dropped and types missing from
+  # the stored order are appended in the default Accountable::TYPES order.
+  def account_group_order
+    default_keys = Accountable::TYPES.map(&:underscore)
+    stored = Array(preferences&.dig("account_group_order")) & default_keys
+    stored + (default_keys - stored)
+  end
+
   # Returns whether clicking outside a modal is prevented from closing it.
   def disable_modal_click_outside?
     preferences&.dig("disable_modal_click_outside") == true
