@@ -628,6 +628,33 @@ class User < ApplicationRecord
     end
   end
 
+  # Drag-and-drop order of the account groups (accountable keys such as
+  # "depository" or "credit_card") across assets and liabilities. Keys not
+  # arranged yet follow in the default Accountable::TYPES order.
+  def account_group_order
+    default_keys = Accountable::TYPES.map(&:underscore)
+    stored = Array(preferences&.dig("account_group_order")) & default_keys
+    stored + (default_keys - stored)
+  end
+
+  # Stores a new order for the groups one sidebar list shows. A list shows
+  # only some groups (the Assets tab has no liabilities, groups without
+  # accounts are hidden), so the given keys take over the positions those
+  # groups already hold in the full order and every other group stays put.
+  def update_account_group_order(group_keys)
+    return false unless group_keys.is_a?(Array)
+
+    keys = group_keys.map(&:to_s).uniq
+    return false unless keys.any? && (keys - Accountable::TYPES.map(&:underscore)).empty?
+
+    with_locked_preferences do |prefs|
+      order = account_group_order
+      slots = order.each_index.select { |i| keys.include?(order[i]) }
+      slots.zip(keys).each { |i, key| order[i] = key }
+      prefs["account_group_order"] = order
+    end
+  end
+
   # Locked read-modify-write of the preferences JSONB: yields a copy of the
   # current preferences (re-read under a row lock) to change in place, then
   # saves it, so concurrent updates of other keys are not lost. Attributes set

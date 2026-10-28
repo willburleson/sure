@@ -205,6 +205,31 @@ class BalanceSheetTest < ActiveSupport::TestCase
     assert_equal 3000 + 5000, liability_groups.find { |ag| ag.name == OtherLiability.display_name }.total
   end
 
+  test "the manual account order arranges groups in the user's group order" do
+    user = users(:empty)
+    user.update!(default_account_order: "manual")
+    create_account(balance: 0, accountable: Depository.new, owner: user)
+    create_account(balance: 0, accountable: Investment.new, owner: user)
+    create_account(balance: 0, accountable: CreditCard.new, owner: user)
+    user.update_account_group_order(%w[credit_card investment depository])
+
+    balance_sheet = BalanceSheet.new(@family, user: user)
+
+    # The combined list (sidebar "All" tab) can put a debt group first; each
+    # side keeps the same relative order.
+    assert_equal %w[credit_card investment depository], balance_sheet.account_groups.map(&:key)
+    assert_equal %w[investment depository], balance_sheet.assets.account_groups.map(&:key)
+  end
+
+  test "other account orders keep the default group order" do
+    user = users(:empty)
+    create_account(balance: 0, accountable: Depository.new, owner: user)
+    create_account(balance: 0, accountable: CreditCard.new, owner: user)
+    user.update_account_group_order(%w[credit_card depository])
+
+    assert_equal %w[depository credit_card], BalanceSheet.new(@family, user: user).account_groups.map(&:key)
+  end
+
   test "sorts accounts in the user's manual order, new accounts last alphabetically" do
     user = users(:empty)
     user.update!(default_account_order: "manual")

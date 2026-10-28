@@ -1460,6 +1460,30 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_nil @user.reload.manual_account_order["not_a_type"]
   end
 
+  test "reorder_groups saves the order of the groups a sidebar list shows" do
+    patch reorder_groups_accounts_url(scope: "all"), params: { group_keys: %w[credit_card depository] }, as: :json
+
+    assert_response :success
+    assert_equal %w[credit_card depository], @user.reload.account_group_order & %w[credit_card depository]
+  end
+
+  test "reorder_groups rejects unknown groups" do
+    patch reorder_groups_accounts_url(scope: "all"), params: { group_keys: %w[credit_card not_a_type] }, as: :json
+
+    assert_response :unprocessable_entity
+    assert_nil @user.reload.preferences["account_group_order"]
+  end
+
+  test "sidebar group lists are sortable only with the manual account order" do
+    get account_url(@account)
+    assert_select "[data-sortable-list-url-value=?]", reorder_groups_accounts_path(scope: "all"), count: 0
+
+    @user.update!(default_account_order: "manual")
+    get account_url(@account)
+    assert_select "[data-sortable-list-url-value=?]", reorder_groups_accounts_path(scope: "all")
+    assert_select "[data-sortable-list-target='item'][data-sortable-list-id='depository']"
+  end
+
   test "sidebar shows drag handles only with the manual account order" do
     get account_url(@account)
     assert_select "[data-controller~='sortable-list']", count: 0

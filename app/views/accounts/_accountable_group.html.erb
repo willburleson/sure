@@ -1,6 +1,32 @@
 <%# locals: (account_group:, mobile: false, all_tab: false, open: nil, sortable: false, **args) %>
 
-<div id="<%= account_group.dom_id(tab: all_tab ? :all : nil, mobile: mobile) %>" data-group-key="<%= account_group.key %>">
+<%# With +sortable+ the group is an item of its tab's sortable group list
+    (accounts/_account_sidebar_tabs) and its rows form a nested list. %>
+<%= tag.div id: account_group.dom_id(tab: all_tab ? :all : nil, mobile: mobile),
+      class: class_names("flex items-start gap-1 rounded-lg" => sortable),
+      data: { group_key: account_group.key }.merge(sortable ? {
+        sortable_list_target: "item",
+        sortable_list_id: account_group.key,
+        action: "dragstart->sortable-list#dragStart dragend->sortable-list#dragEnd"
+      } : {}) do %>
+  <% if sortable %>
+    <%# Hidden until the sidebar is in sort mode (account-sort-mode). Kept
+        outside the summary so pressing it does not open or close the group. %>
+    <%= render DS::Button.new(
+      variant: :icon,
+      icon: "grip-vertical",
+      size: :sm,
+      style: "display:none",
+      class: "shrink-0 mt-1.5 cursor-grab active:cursor-grabbing touch-none [-webkit-touch-callout:none]",
+      aria_label: t("accounts.sidebar.reorder_group", group: account_group.name),
+      title: t("accounts.sidebar.reorder_hint"),
+      data: {
+        account_sort_mode_target: "handle",
+        action: "touchstart->sortable-list#touchStart touchmove->sortable-list#touchMove touchend->sortable-list#touchEnd touchcancel->sortable-list#touchCancel contextmenu->sortable-list#suppressContextMenu keydown->sortable-list#handleKeyDown"
+      }
+    ) %>
+  <% end %>
+  <div class="<%= "min-w-0 grow" if sortable %>">
   <% is_open = open.nil? ? (account_group.accounts.any? { |account| page_active?(account_path(account)) } || Current.user.always_expanded_account_group?(account_group.key)) : open %>
   <%= render DS::Disclosure.new(align: :left, open: is_open) do |disclosure| %>
     <% disclosure.with_summary_content do %>
@@ -106,3 +132,4 @@
     </div>
   <% end %>
 </div>
+<% end %>

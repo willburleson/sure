@@ -14,7 +14,8 @@ class BalanceSheet
     @assets ||= ClassificationGroup.new(
       classification: "asset",
       currency: family.currency,
-      accounts: sorted(account_totals.asset_accounts)
+      accounts: sorted(account_totals.asset_accounts),
+      group_order: group_order
     )
   end
 
@@ -22,7 +23,8 @@ class BalanceSheet
     @liabilities ||= ClassificationGroup.new(
       classification: "liability",
       currency: family.currency,
-      accounts: sorted(account_totals.liability_accounts)
+      accounts: sorted(account_totals.liability_accounts),
+      group_order: group_order
     )
   end
 
@@ -30,8 +32,13 @@ class BalanceSheet
     [ assets, liabilities ]
   end
 
+  # Assets then liabilities, or with the manual account order, the user's
+  # group order across both (a debt group can come before asset groups).
   def account_groups
-    [ assets.account_groups, liabilities.account_groups ].flatten
+    groups = [ assets.account_groups, liabilities.account_groups ].flatten
+    return groups unless group_order
+
+    groups.sort_by.with_index { |group, i| [ group_order.index(group.key) || group_order.size, i ] }
   end
 
   def net_worth
@@ -53,6 +60,12 @@ class BalanceSheet
   private
     def sync_status_monitor
       @sync_status_monitor ||= SyncStatusMonitor.new(family)
+    end
+
+    # Only the manual account order arranges groups by hand; the other orders
+    # keep the default group order.
+    def group_order
+      user.account_group_order if user&.account_order&.manual?
     end
 
     def account_totals

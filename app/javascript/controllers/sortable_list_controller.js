@@ -54,6 +54,10 @@ export default class extends Controller {
     // selected text) is not a reorder.
     if (!event.currentTarget.draggable) return;
 
+    // A list nested in an item of another list (accounts inside a sortable
+    // group) keeps the drag of its own row from also starting the outer one.
+    event.stopPropagation();
+
     // If a touch interaction is in progress, cancel native drag —
     // use touch events with hold delay instead.
     // This avoids blocking mouse/trackpad drag on touch-capable laptops.
@@ -75,6 +79,7 @@ export default class extends Controller {
   }
 
   dragEnd(event) {
+    event.stopPropagation();
     event.currentTarget.classList.remove("opacity-50");
     event.currentTarget.setAttribute("aria-grabbed", "false");
     this.clearPlaceholders();

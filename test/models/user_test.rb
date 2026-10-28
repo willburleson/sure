@@ -1426,4 +1426,29 @@ class UserTest < ActiveSupport::TestCase
     assert_not @user.update_manual_account_order("transactions", [ accounts(:depository).id ])
     assert_equal({}, @user.reload.manual_account_order)
   end
+
+  test "account_group_order defaults to Accountable::TYPES" do
+    assert_equal Accountable::TYPES.map(&:underscore), @user.account_group_order
+  end
+
+  test "update_account_group_order moves the given groups within the positions they hold" do
+    shown = %w[credit_card investment depository]
+
+    # The "All" tab puts the credit cards first ...
+    assert @user.update_account_group_order(%w[credit_card depository investment])
+    # ... then the Assets tab, which shows no liabilities, swaps its two groups.
+    assert @user.update_account_group_order(%w[investment depository])
+
+    order = @user.reload.account_group_order
+    assert_equal shown, order & shown
+    assert_equal "credit_card", order.first
+    assert_equal Accountable::TYPES.map(&:underscore).sort, order.sort
+  end
+
+  test "update_account_group_order rejects unknown groups and non-lists" do
+    assert_not @user.update_account_group_order(%w[credit_card transactions])
+    assert_not @user.update_account_group_order({ "0" => "credit_card" })
+    assert_not @user.update_account_group_order([])
+    assert_nil @user.reload.preferences["account_group_order"]
+  end
 end

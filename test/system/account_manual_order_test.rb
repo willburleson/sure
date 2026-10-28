@@ -228,7 +228,78 @@ class AccountManualOrderTest < ApplicationSystemTestCase
     assert_nil @user.reload.manual_account_order["depository"]
   end
 
+  test "moving a group with the keyboard in the All tab saves the group order" do
+    visit account_path(accounts(:depository), account_sidebar_tab: "all")
+
+    before = visible_all_tab_group_keys
+    assert_operator before.index("credit_card"), :>, 0
+
+    within_testid("account-sidebar-tabs") do
+      find("button[aria-label='#{I18n.t("accounts.sidebar.sort_mode.start")}']", visible: true).click
+
+      handle = find("button[aria-label='#{I18n.t("accounts.sidebar.reorder_group", group: CreditCard.display_name)}']", visible: true)
+      handle.send_keys(:enter)
+      handle.send_keys(:up)
+      handle.send_keys(:enter)
+    end
+
+    moved = before.dup
+    i = moved.index("credit_card")
+    moved[i - 1], moved[i] = moved[i], moved[i - 1]
+    assert_equal moved, visible_all_tab_group_keys
+
+    assert_eventually { (@user.reload.account_group_order & moved) == moved }
+
+    visit account_path(accounts(:depository), account_sidebar_tab: "all")
+    assert_equal moved, visible_all_tab_group_keys
+  end
+
+  test "dragging an account does not move its group" do
+    checking = accounts(:depository)
+    plaid = accounts(:connected)
+
+    visit account_path(checking)
+    groups_before = visible_group_keys
+
+    within_testid("account-sidebar-tabs") do
+      find("button[aria-label='#{I18n.t("accounts.sidebar.sort_mode.start")}']", visible: true).click
+    end
+
+    # The row sits inside a sortable group, so the drag events also reach the
+    # group list. Dropped at the top of its own list, only the row moves.
+    page.execute_script(<<~JS, plaid.id)
+      const row = [...document.querySelectorAll(`[data-sortable-list-target='item'][data-sortable-list-id='${arguments[0]}']`)]
+        .find((el) => el.offsetParent !== null);
+      const list = row.closest("[data-controller~='sortable-list']");
+      const dataTransfer = new DataTransfer();
+      row.dispatchEvent(new DragEvent("dragstart", { bubbles: true, dataTransfer }));
+      list.dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer, clientY: 0 }));
+      list.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer, clientY: 0 }));
+      row.dispatchEvent(new DragEvent("dragend", { bubbles: true, dataTransfer }));
+    JS
+
+    within_testid("account-sidebar-tabs") do
+      assert_equal [ plaid.id, checking.id ], visible_depository_ids.first(2)
+    end
+    assert_equal groups_before, visible_group_keys
+    assert_eventually { @user.reload.manual_account_order["depository"]&.first == plaid.id }
+    assert_nil @user.reload.preferences["account_group_order"]
+  end
+
   private
+    def visible_all_tab_group_keys
+      group_keys_in(all("[data-sortable-list-url-value='#{reorder_groups_accounts_path(scope: "all")}']", visible: true).first)
+    end
+
+    def visible_group_keys
+      group_keys_in(all("[data-sortable-list-param-value='group_keys']", visible: true).first)
+    end
+
+    # Direct items only: each group item also holds its account rows.
+    def group_keys_in(list)
+      list.all(:xpath, "./*[@data-sortable-list-target='item']").map { |item| item["data-sortable-list-id"] }
+    end
+
     def open_group_count
       evaluate_script("document.querySelectorAll(\"[data-testid='account-sidebar-tabs'] details[open]\").length")
     end

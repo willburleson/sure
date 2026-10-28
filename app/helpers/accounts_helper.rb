@@ -37,6 +37,23 @@ module AccountsHelper
     match && match[1]
   end
 
+  # Data attributes that make one sidebar tab's list of account groups
+  # sortable (manual account order only). Each tab saves its own scope; the
+  # desktop and mobile copies of a tab mirror each other.
+  def account_group_list_sortable_data(sortable, scope:)
+    return {} unless sortable
+
+    {
+      controller: "sortable-list",
+      sortable_list_url_value: reorder_groups_accounts_path(scope: scope),
+      sortable_list_param_value: "group_keys",
+      sortable_list_hold_delay_value: 400,
+      sortable_list_save_timeout_value: 10_000,
+      sortable_list_mirror_lists_value: true,
+      action: "dragover->sortable-list#dragOver drop->sortable-list#drop account-sort-mode:stop@window->sortable-list#releaseKeyboardGrab turbo:before-visit@window->sortable-list#saveBeforeVisit"
+    }
+  end
+
   # Cache key for `accounts/_account_sidebar_tabs.html.erb`.
   # Kept here (not in the ERB) so the partial stays render-only.
   #
@@ -56,7 +73,7 @@ module AccountsHelper
       end
 
     [
-      family.build_cache_key("account_sidebar_tabs_v5", invalidate_on_data_updates: true),
+      family.build_cache_key("account_sidebar_tabs_v6", invalidate_on_data_updates: true),
       Current.user&.id,
       shares_version,
       active_tab,
@@ -72,7 +89,8 @@ module AccountsHelper
       # order, must re-render the sidebar right away rather than after the
       # 12h expiry.
       Current.user&.default_account_order,
-      Current.user&.account_order&.manual? ? Digest::SHA256.hexdigest(Current.user.manual_account_order.to_json) : nil
+      Current.user&.account_order&.manual? ? Digest::SHA256.hexdigest(Current.user.manual_account_order.to_json) : nil,
+      Current.user&.account_order&.manual? ? Current.user.account_group_order.join(",") : nil
     ]
   end
 end

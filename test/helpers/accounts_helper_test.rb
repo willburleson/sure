@@ -26,6 +26,15 @@ class AccountsHelperTest < ActionView::TestCase
     assert_not_equal before, sidebar_key
   end
 
+  test "sidebar cache key changes when the group order changes" do
+    @user.update!(default_account_order: "manual")
+    before = sidebar_key
+
+    @user.update_account_group_order(%w[credit_card depository])
+
+    assert_not_equal before, sidebar_key
+  end
+
   private
     def sidebar_key
       account_sidebar_tabs_cache_key(family: @user.family, active_tab: "all", mobile: false)

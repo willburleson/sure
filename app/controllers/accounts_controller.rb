@@ -240,6 +240,15 @@ class AccountsController < ApplicationController
     end
   end
 
+  # Saves the manual order of the account groups one sidebar list shows.
+  def reorder_groups
+    if Current.user.update_account_group_order(params[:group_keys])
+      head :ok
+    else
+      head :unprocessable_entity
+    end
+  end
+
   def toggle_active
     if @account.active?
       @account.disable!
