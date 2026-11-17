@@ -16,6 +16,15 @@ sure.willburleson.com (deployed by the private `sure-oci` repo).
    `preferences["account_group_order"]`. `BalanceSheet#account_groups` (the sidebar's All tab)
    follows it across assets and liabilities; `BalanceSheet::ClassificationGroup` applies the
    same relative order within each side (Assets / Debts tabs, dashboard balance sheet).
+2. **Cards & points** — a "Cards" nav page (`/rewards`) and a "Cards & points" dashboard
+   section, per card holder: Chase 5/24 count and drop-off dates, next eligible
+   application/bonus date for each catalog card under issuer rules (5/24, velocity limits,
+   per-product cooldowns, lifetime and family rules), and point balances with an estimate
+   (last entered balance + linked cards' spend since, at catalog earn rates). Balances are
+   updated inline from either page. Tables `reward_cards` + `point_balances`; catalog, earn
+   rates and rules in `config/reward_cards.yml`; logic in `app/models/reward_card/` and
+   `PointBalance::Estimator`. Personal data is imported from the private `sure-oci` repo
+   (`cards/`), never committed here.
 
 ## Moving to a new upstream release
 

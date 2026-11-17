@@ -114,6 +114,9 @@ en:
         categories: "Categories"
         value: "Value"
         weight: "Weight"
+      rewards:
+        title: "Cards & points"
+        open: "Open cards"
       investment_summary:
         title: "Investments"
         total_return: "Total Return"

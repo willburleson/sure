@@ -1,0 +1,51 @@
+<%# locals: (reward_card:) %>
+<% holders = Current.family.reward_cards.distinct.pluck(:holder) | Current.family.point_balances.distinct.pluck(:holder) %>
+<%= styled_form_with model: reward_card, class: "space-y-3", data: { turbo_frame: :_top } do |f| %>
+  <% if reward_card.errors.any? %>
+    <p class="text-sm text-destructive"><%= reward_card.errors.full_messages.to_sentence %></p>
+  <% end %>
+
+  <%= f.text_field :holder, label: t(".holder"), required: true, list: "reward-card-holders", autocomplete: "off" %>
+  <datalist id="reward-card-holders">
+    <% holders.each do |holder| %><option value="<%= holder %>"></option><% end %>
+  </datalist>
+
+  <%= f.select :product,
+        RewardCard::Catalog.products.values.group_by { |p| RewardCard::Catalog.issuer(p.issuer).name }.transform_values { |ps| ps.map { |p| [ p.name, p.key ] } },
+        { include_blank: t(".custom_product"), label: t(".product") } %>
+  <%= f.text_field :name, label: t(".name"), placeholder: t(".name_placeholder") %>
+  <%= f.select :issuer, RewardCard::Catalog.issuers.values.map { |issuer| [ issuer.name, issuer.key ] }, { include_blank: t(".issuer_from_product"), label: t(".issuer") } %>
+
+  <div class="grid grid-cols-2 gap-2">
+    <%= f.date_field :opened_on, label: t(".opened_on"), required: true %>
+    <%= f.date_field :closed_on, label: t(".closed_on") %>
+  </div>
+
+  <div class="flex items-center justify-between gap-2">
+    <span class="text-sm text-primary"><%= t(".closed") %></span>
+    <%= f.toggle :closed %>
+  </div>
+  <div class="flex items-center justify-between gap-2">
+    <span class="text-sm text-primary"><%= t(".business") %></span>
+    <%= f.toggle :business %>
+  </div>
+  <%= f.select :counts_toward_524,
+        [ [ t(".counts_default"), "" ], [ t(".counts_yes"), "true" ], [ t(".counts_no"), "false" ] ],
+        { label: t(".counts_toward_524"), selected: reward_card.counts_toward_524.nil? ? "" : reward_card.counts_toward_524.to_s } %>
+
+  <div class="flex items-center justify-between gap-2">
+    <span class="text-sm text-primary"><%= t(".bonus_received") %></span>
+    <%= f.toggle :bonus_received %>
+  </div>
+  <%= f.date_field :bonus_received_on, label: t(".bonus_received_on"), help_text: t(".bonus_received_on_help") %>
+
+  <%= f.select :account_id,
+        Current.family.accounts.where(accountable_type: "CreditCard").order(:name).map { |account| [ account.name, account.id ] },
+        { include_blank: t(".no_account"), label: t(".account") } %>
+  <%= f.select :program, RewardCard::Catalog.programs.values.map { |program| [ program.name, program.key ] },
+        { include_blank: t(".program_from_product"), label: t(".program") } %>
+  <%= f.number_field :base_rate, label: t(".base_rate"), step: "0.01", min: 0, placeholder: t(".base_rate_placeholder") %>
+  <%= f.text_area :notes, label: t(".notes"), rows: 2 %>
+
+  <%= f.submit %>
+<% end %>

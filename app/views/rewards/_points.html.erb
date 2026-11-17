@@ -1,0 +1,68 @@
+<%# locals: (holder:, compact: false) %>
+<% if holder.estimates.any? %>
+  <div class="bg-container-inset rounded-xl p-1 overflow-x-auto">
+    <div class="rounded-lg shadow-border-xs bg-container overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-container-inset">
+          <tr class="uppercase text-xs font-medium text-secondary">
+            <th class="px-3 py-2 text-left font-medium"><%= t("rewards.points.program") %></th>
+            <% unless compact %>
+              <th class="hidden md:table-cell px-3 py-2 text-right font-medium"><%= t("rewards.points.recorded") %></th>
+              <th class="hidden md:table-cell px-3 py-2 text-right font-medium"><%= t("rewards.points.earned") %></th>
+            <% end %>
+            <th class="px-3 py-2 text-right font-medium"><%= t("rewards.points.estimate") %></th>
+            <th class="px-3 py-2 text-right font-medium"><%= t("rewards.points.update") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% holder.estimates.each_with_index do |estimate, idx| %>
+            <% format = ->(value) { estimate.cash? ? number_to_currency(value) : number_with_delimiter(value.to_i) } %>
+            <tr class="<%= "table-divider" if idx < holder.estimates.size - 1 %>">
+              <td class="px-3 py-2">
+                <p class="font-medium text-primary"><%= estimate.catalog_program&.name || estimate.program %></p>
+                <p class="text-xs text-secondary">
+                  <% if estimate.as_of %>
+                    <%= link_to t("rewards.points.as_of", date: estimate.as_of.strftime("%-m/%-d/%y")), point_balances_path(holder: estimate.holder, program: estimate.program), class: "hover:text-primary", data: { turbo_frame: :modal } %>
+                  <% else %>
+                    <%= t("rewards.points.no_balance") %>
+                  <% end %>
+                  <% if compact && estimate.earned.nonzero? %>
+                    &middot; <span class="privacy-sensitive">+<%= format.(estimate.earned) %></span>
+                  <% end %>
+                </p>
+              </td>
+              <% unless compact %>
+                <td class="hidden md:table-cell px-3 py-2 text-right privacy-sensitive"><%= estimate.balance ? format.(estimate.recorded) : "–" %></td>
+                <td class="hidden md:table-cell px-3 py-2 text-right text-secondary privacy-sensitive" title="<%= t("rewards.points.earned_title", count: estimate.transaction_count, cards: estimate.cards.map(&:name).to_sentence) %>">
+                  <%= estimate.earned.nonzero? ? "+#{format.(estimate.earned)}" : "–" %>
+                </td>
+              <% end %>
+              <td class="px-3 py-2 text-right font-medium text-primary privacy-sensitive"><%= estimate.balance ? format.(estimate.total) : "–" %></td>
+              <td class="px-3 py-2">
+                <%= form_with model: PointBalance.new, url: point_balances_path, data: { turbo_frame: "_top" }, class: "flex items-center justify-end gap-1" do |f| %>
+                  <%= f.hidden_field :holder, value: estimate.holder %>
+                  <%= f.hidden_field :program, value: estimate.program %>
+                  <%= f.text_field :balance, inputmode: "decimal", required: true, placeholder: estimate.balance ? format.(estimate.total) : "0",
+                        aria: { label: t("rewards.points.new_balance", program: estimate.catalog_program&.name) },
+                        class: "w-24 sm:w-28 text-right text-sm px-2 py-1 rounded-md border border-secondary bg-container text-primary" %>
+                  <%= f.button t("rewards.points.save"), class: "text-xs font-medium px-2 py-1 rounded-md bg-container-inset hover:bg-container-inset-hover text-primary" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>
+
+<% unless compact %>
+  <%= form_with model: PointBalance.new, url: point_balances_path, class: "flex flex-wrap items-end gap-2 mt-3" do |f| %>
+    <%= f.hidden_field :holder, value: holder.name %>
+    <%= f.select :program, RewardCard::Catalog.programs.values.map { |program| [ program.name, program.key ] }, {},
+          class: "text-sm px-2 py-1.5 rounded-md border border-secondary bg-container text-primary", aria: { label: t("rewards.points.program") } %>
+    <%= f.text_field :balance, inputmode: "decimal", required: true, placeholder: t("rewards.points.balance"),
+          class: "w-32 text-sm px-2 py-1.5 rounded-md border border-secondary bg-container text-primary", aria: { label: t("rewards.points.balance") } %>
+    <%= f.button t("rewards.points.add_program"), class: "text-sm font-medium px-3 py-1.5 rounded-md bg-container-inset hover:bg-container-inset-hover text-primary" %>
+  <% end %>
+<% end %>

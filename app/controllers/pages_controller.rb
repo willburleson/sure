@@ -19,7 +19,8 @@ class PagesController < ApplicationController
     "outflows_donut"     => { col_span: "single", grow: false, min_height: 0 },
     "investment_summary" => { col_span: "single", grow: false, min_height: 0, width_toggle: true },
     "net_worth_chart"    => { col_span: "single", grow: true,  min_height: 208, width_toggle: true },
-    "balance_sheet"      => { col_span: "single", grow: false, min_height: 0, width_toggle: true }
+    "balance_sheet"      => { col_span: "single", grow: false, min_height: 0, width_toggle: true },
+    "rewards"            => { col_span: "single", grow: false, min_height: 0, width_toggle: true }
   }.freeze
 
   # Number of consecutive months (ending at the selected month) shown as
@@ -67,6 +68,8 @@ class PagesController < ApplicationController
 
     @spending_trend_month = spending_trend_month_param
     @spending_trend_data = build_spending_trend_data(income_statement, @spending_trend_month)
+
+    @rewards_summary = RewardCard::Summary.new(Current.family)
 
     @dashboard_sections = build_dashboard_sections
 
@@ -212,6 +215,15 @@ class PagesController < ApplicationController
           layout: section_layout("balance_sheet"),
           locals: { balance_sheet: @balance_sheet },
           visible: @accounts.any?,
+          collapsible: true
+        },
+        {
+          key: "rewards",
+          title: "pages.dashboard.rewards.title",
+          partial: "pages/dashboard/rewards",
+          layout: section_layout("rewards"),
+          locals: { rewards_summary: @rewards_summary },
+          visible: @rewards_summary.any?,
           collapsible: true
         }
       ].compact

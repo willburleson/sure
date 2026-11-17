@@ -422,6 +422,10 @@ Rails.application.routes.draw do
     end
   end
 
+  get "rewards", to: "rewards#index", as: :rewards
+  resources :reward_cards, only: %i[new create edit update destroy]
+  resources :point_balances, only: %i[index create destroy]
+
   resources :tags, except: :show do
     resources :deletions, only: %i[new create], module: :tag
     delete :destroy_all, on: :collection

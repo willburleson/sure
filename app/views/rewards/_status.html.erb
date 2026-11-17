@@ -1,0 +1,17 @@
+<%# locals: (result:) %>
+<% classes = {
+     eligible: "bg-green-500/10 text-green-600",
+     upcoming: "bg-yellow-500/10 text-yellow-700",
+     waiting: "bg-gray-500/10 text-secondary",
+     close_first: "bg-orange-500/10 text-orange-600",
+     never: "bg-red-500/10 text-red-600"
+   } %>
+<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap <%= classes.fetch(result.status) %>">
+  <% if result.newly_eligible? %>
+    <%= t("rewards.status.newly_eligible") %>
+  <% elsif result.eligible_on && result.status != :eligible %>
+    <%= t("rewards.status.on_date", date: result.eligible_on.strftime("%b %-d, %Y")) %>
+  <% else %>
+    <%= t("rewards.status.#{result.status}") %>
+  <% end %>
+</span>

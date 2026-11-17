@@ -1,0 +1,242 @@
+# Card catalog and issuer application/bonus rules for the Cards page
+# (RewardCard::Catalog). Rules are community data points, not issuer policy:
+# check the offer's terms before applying. Last reviewed 2026-11.
+#
+# programs: where points land. unit "points" earns rate x dollars; unit "cash"
+#   earns rate percent of dollars.
+# categories: earn categories -> lowercase substrings matched against a
+#   transaction's Sure category name and its parent's name.
+# issuers.<key>.rules / products.<key>.rules: rule list, see RewardCard::Eligibility.
+#   five_24                       Chase: under 5 cards counted by 5/24 in 24 months
+#   velocity  max, days, scope    at most `max` new cards in `days`;
+#                                 scope issuer | issuer_personal | issuer_business | all_524
+#   cooldown  months, scope, from bonus not available until `months` after the last
+#                                 bonus (from: bonus) or account close (from: close)
+#                                 on a card in scope (product | family | issuer)
+#   not_holding scope             must not currently hold a card in scope
+#   lifetime  scope, also         one bonus per lifetime for the scope, plus any
+#                                 products listed in `also` (Amex family rules)
+
+programs:
+  chase_ur:        { name: Chase Ultimate Rewards, unit: points }
+  amex_mr:         { name: Amex Membership Rewards, unit: points }
+  citi_ty:         { name: Citi ThankYou, unit: points }
+  capital_one:     { name: Capital One Miles, unit: points }
+  capital_one_cash: { name: Capital One Cash, unit: cash }
+  chase_cash:      { name: Chase Cash Back, unit: cash }
+  bilt:            { name: Bilt Points, unit: points }
+  bofa:            { name: Bank of America Points, unit: points }
+  wells_fargo:     { name: Wells Fargo Rewards, unit: points }
+  us_bank:         { name: U.S. Bank Rewards, unit: points }
+  discover:        { name: Discover Cashback, unit: cash }
+  alaska:          { name: Alaska Atmos Rewards, unit: points }
+  american:        { name: American AAdvantage, unit: points }
+  delta:           { name: Delta SkyMiles, unit: points }
+  united:          { name: United MileagePlus, unit: points }
+  southwest:       { name: Southwest Rapid Rewards, unit: points }
+  hyatt:           { name: World of Hyatt, unit: points }
+  marriott:        { name: Marriott Bonvoy, unit: points }
+  hilton:          { name: Hilton Honors, unit: points }
+
+categories:
+  dining:     [restaurant, dining, coffee, food & drink]
+  travel:     [travel, flight, lodging, hotel, airline, rental car]
+  flights:    [flight, airline]
+  hotels:     [lodging, hotel]
+  groceries:  [grocer, supermarket]
+  gas:        [gas, fuel]
+  transit:    [transit, rideshare, taxi, subway]
+  streaming:  [streaming]
+  drugstore:  [pharmacy, drugstore]
+  phone:      [phone & internet]
+  rent:       [rent]
+
+issuers:
+  chase:
+    name: Chase
+    rules:
+      - { type: five_24 }
+      - { type: velocity, max: 2, days: 30, scope: issuer, note: "Chase rarely approves more than 2 cards in 30 days" }
+      - { type: velocity, max: 1, days: 90, scope: issuer_business, note: "Space Ink applications about 90 days apart" }
+  amex:
+    name: American Express
+    rules:
+      - { type: velocity, max: 1, days: 5, scope: issuer, note: "Amex 1 card per 5 days" }
+      - { type: velocity, max: 2, days: 90, scope: issuer, note: "Amex 2 credit cards per 90 days" }
+      - { type: lifetime, scope: product, note: "Amex bonus once per lifetime per card (pop-up)" }
+  citi:
+    name: Citi
+    rules:
+      - { type: velocity, max: 1, days: 8, scope: issuer, note: "Citi 1 card per 8 days" }
+      - { type: velocity, max: 2, days: 65, scope: issuer, note: "Citi 2 cards per 65 days" }
+      - { type: velocity, max: 1, days: 95, scope: issuer_business, note: "Citi 1 business card per 95 days" }
+      - { type: cooldown, months: 48, scope: product, from: bonus, note: "Citi 48 months since this card's last bonus" }
+  capital_one:
+    name: Capital One
+    rules:
+      - { type: velocity, max: 1, days: 182, scope: issuer_personal, note: "Capital One about 1 personal card per 6 months" }
+      - { type: cooldown, months: 48, scope: product, from: bonus, note: "Capital One 48 months since this card's last bonus" }
+  bofa:
+    name: Bank of America
+    rules:
+      - { type: velocity, max: 2, days: 60, scope: issuer, note: "BofA 2/3/4: 2 cards per 2 months" }
+      - { type: velocity, max: 3, days: 365, scope: issuer, note: "BofA 2/3/4: 3 cards per 12 months" }
+      - { type: velocity, max: 4, days: 730, scope: issuer, note: "BofA 2/3/4: 4 cards per 24 months" }
+      - { type: not_holding, scope: product, note: "BofA: no bonus while holding this card" }
+      - { type: cooldown, months: 24, scope: product, from: open, note: "BofA: no bonus if opened this card in the past 24 months" }
+  barclays:
+    name: Barclays
+    rules:
+      - { type: velocity, max: 6, days: 730, scope: all_524, note: "Barclays 6/24 (soft)" }
+      - { type: not_holding, scope: product, note: "Barclays: no bonus while holding this card" }
+      - { type: cooldown, months: 24, scope: product, from: bonus, note: "Barclays 24 months since this card's last bonus" }
+  us_bank:
+    name: U.S. Bank
+    rules:
+      - { type: velocity, max: 2, days: 365, scope: all_524, note: "U.S. Bank dislikes more than about 2 new cards in 12 months" }
+  wells_fargo:
+    name: Wells Fargo
+    rules:
+      - { type: velocity, max: 1, days: 182, scope: issuer, note: "Wells Fargo 1 card per 6 months" }
+      - { type: cooldown, months: 15, scope: issuer, from: bonus, note: "Wells Fargo 15 months since any Wells Fargo card bonus" }
+  bilt:
+    name: Bilt
+    rules: []
+  discover:
+    name: Discover
+    rules:
+      - { type: lifetime, scope: issuer, note: "Discover first-year match once per lifetime" }
+  other:
+    name: Other
+    rules: []
+
+products:
+  # Chase
+  chase_sapphire_preferred:
+    { name: Chase Sapphire Preferred, issuer: chase, family: sapphire, program: chase_ur,
+      earn: { base: 1, dining: 3, streaming: 3, travel: 2 },
+      rules: [ { type: not_holding, scope: product, note: "Chase: no Sapphire bonus while holding this card" },
+               { type: lifetime, scope: product, note: "Chase Sapphire pop-up: bonus usually denied if you ever had this card (2025 rules replaced the 48-month rule)" } ] }
+  chase_sapphire_reserve:
+    { name: Chase Sapphire Reserve, issuer: chase, family: sapphire, program: chase_ur,
+      earn: { base: 1, dining: 3, flights: 4, hotels: 4 },
+      rules: [ { type: not_holding, scope: product, note: "Chase: no Sapphire bonus while holding this card" },
+               { type: lifetime, scope: product, note: "Chase Sapphire pop-up: bonus usually denied if you ever had this card (2025 rules replaced the 48-month rule)" } ] }
+  chase_freedom_unlimited:
+    { name: Chase Freedom Unlimited, issuer: chase, family: freedom, program: chase_ur,
+      earn: { base: 1.5, dining: 3, drugstore: 3 },
+      rules: &chase_personal [ { type: not_holding, scope: product, note: "Chase: no bonus while holding this card" },
+                               { type: cooldown, months: 24, scope: product, from: bonus, note: "Chase: 24 months since this card's last bonus" } ] }
+  chase_freedom_flex:
+    { name: Chase Freedom Flex, issuer: chase, family: freedom, program: chase_ur,
+      earn: { base: 1, dining: 3, drugstore: 3 }, rules: *chase_personal }
+  chase_ink_unlimited:
+    { name: Chase Ink Business Unlimited, issuer: chase, business: true, program: chase_ur,
+      earn: { base: 1.5 }, rules: &chase_ink [ { type: cooldown, months: 24, scope: product, from: bonus, note: "Chase Ink: 24 months since this card's last bonus" } ] }
+  chase_ink_cash:
+    { name: Chase Ink Business Cash, issuer: chase, business: true, program: chase_ur,
+      earn: { base: 1, phone: 5, gas: 2, dining: 2 }, rules: *chase_ink }
+  chase_ink_preferred:
+    { name: Chase Ink Business Preferred, issuer: chase, business: true, program: chase_ur,
+      earn: { base: 1, travel: 3, phone: 3 }, rules: *chase_ink }
+  chase_ink_premier:
+    { name: Chase Ink Business Premier, issuer: chase, business: true, program: chase_cash,
+      earn: { base: 2 }, rules: *chase_ink }
+  chase_united_explorer:
+    { name: Chase United Explorer, issuer: chase, family: united, program: united,
+      earn: { base: 1, dining: 2, hotels: 2, flights: 2 }, rules: *chase_personal }
+  chase_world_of_hyatt:
+    { name: Chase World of Hyatt, issuer: chase, program: hyatt,
+      earn: { base: 1, dining: 2, transit: 2 }, rules: *chase_personal }
+  chase_southwest_priority:
+    { name: Chase Southwest Priority, issuer: chase, family: southwest, program: southwest,
+      earn: { base: 1, flights: 3, hotels: 2, transit: 2 }, rules: *chase_personal }
+  chase_other:
+    { name: Chase (other), issuer: chase, program: chase_ur, earn: { base: 1 }, watch: false }
+
+  # Amex
+  amex_platinum:
+    { name: Amex Platinum, issuer: amex, family: amex_mr_charge, program: amex_mr,
+      earn: { base: 1, flights: 5 } }
+  amex_gold:
+    { name: Amex Gold, issuer: amex, family: amex_mr_charge, program: amex_mr,
+      earn: { base: 1, dining: 4, groceries: 4, flights: 3 },
+      rules: [ { type: lifetime, scope: product, also: [ amex_platinum ], note: "Amex family rule: no Gold bonus after having Platinum" } ] }
+  amex_green:
+    { name: Amex Green, issuer: amex, family: amex_mr_charge, program: amex_mr,
+      earn: { base: 1, dining: 3, travel: 3 },
+      rules: [ { type: lifetime, scope: product, also: [ amex_gold, amex_platinum ], note: "Amex family rule: no Green bonus after having Gold or Platinum" } ] }
+  amex_business_platinum:
+    { name: Amex Business Platinum, issuer: amex, business: true, program: amex_mr, earn: { base: 1, flights: 5 } }
+  amex_business_gold:
+    { name: Amex Business Gold, issuer: amex, business: true, program: amex_mr, earn: { base: 1 } }
+  amex_delta_gold:
+    { name: Amex Delta SkyMiles Gold, issuer: amex, family: delta, program: delta, earn: { base: 1, dining: 2, groceries: 2, flights: 2 } }
+  amex_other:
+    { name: Amex (other), issuer: amex, program: amex_mr, earn: { base: 1 }, watch: false }
+
+  # Citi
+  citi_strata_premier:
+    { name: Citi Strata Premier, issuer: citi, family: citi_premier, program: citi_ty,
+      earn: { base: 1, dining: 3, groceries: 3, gas: 3, flights: 3, hotels: 3 } }
+  citi_strata_elite:
+    { name: Citi Strata Elite, issuer: citi, program: citi_ty,
+      earn: { base: 1.5 } }
+  citi_double_cash:
+    { name: Citi Double Cash, issuer: citi, program: citi_ty, earn: { base: 2 }, watch: false }
+  citi_custom_cash:
+    { name: Citi Custom Cash, issuer: citi, program: citi_ty, earn: { base: 1, dining: 5 } }
+  citi_aadvantage_platinum:
+    { name: Citi AAdvantage Platinum Select, issuer: citi, family: citi_aa, program: american,
+      earn: { base: 1, dining: 2, gas: 2, flights: 2 } }
+  citi_aadvantage_executive:
+    { name: Citi AAdvantage Executive, issuer: citi, family: citi_aa, program: american,
+      earn: { base: 1, flights: 4 } }
+  citi_other:
+    { name: Citi (other), issuer: citi, program: citi_ty, earn: { base: 1 }, watch: false }
+
+  # Capital One
+  capital_one_venture_x:
+    { name: Capital One Venture X, issuer: capital_one, family: venture, program: capital_one, earn: { base: 2 } }
+  capital_one_venture:
+    { name: Capital One Venture, issuer: capital_one, family: venture, program: capital_one, earn: { base: 2 } }
+  capital_one_quicksilver:
+    { name: Capital One Quicksilver, issuer: capital_one, program: capital_one_cash, earn: { base: 1.5 }, watch: false }
+  capital_one_savor:
+    { name: Capital One Savor, issuer: capital_one, program: capital_one_cash, earn: { base: 1, dining: 3, groceries: 3, streaming: 3 } }
+  capital_one_spark_cash:
+    { name: Capital One Spark Cash, issuer: capital_one, business: true, counts_toward_524: true, program: capital_one_cash, earn: { base: 2 } }
+  capital_one_venture_x_business:
+    { name: Capital One Venture X Business, issuer: capital_one, business: true, program: capital_one, earn: { base: 2 } }
+  capital_one_other:
+    { name: Capital One (other), issuer: capital_one, program: capital_one, earn: { base: 1 }, watch: false }
+
+  # Bank of America
+  bofa_premium_rewards:
+    { name: BofA Premium Rewards, issuer: bofa, program: bofa, earn: { base: 1.5, travel: 2, dining: 2 } }
+  bofa_alaska:
+    { name: BofA Alaska Atmos Rewards Ascent, issuer: bofa, program: alaska, earn: { base: 1, flights: 3, gas: 2, transit: 2 } }
+  bofa_merrill_plus:
+    { name: Merrill+ Visa Signature, issuer: bofa, program: bofa, earn: { base: 1, travel: 2, dining: 2 }, watch: false }
+  bofa_other:
+    { name: Bank of America (other), issuer: bofa, program: bofa, earn: { base: 1 }, watch: false }
+
+  # Others
+  barclays_aadvantage_aviator:
+    { name: Barclays AAdvantage Aviator Red, issuer: barclays, program: american, earn: { base: 1, flights: 2 } }
+  barclays_other:
+    { name: Barclays (other), issuer: barclays, earn: { base: 1 }, watch: false }
+  us_bank_altitude_connect:
+    { name: U.S. Bank Altitude Connect, issuer: us_bank, program: us_bank, earn: { base: 1, travel: 4, gas: 4, dining: 2, groceries: 2, streaming: 2 } }
+  us_bank_other:
+    { name: U.S. Bank (other), issuer: us_bank, program: us_bank, earn: { base: 1 }, watch: false }
+  wells_fargo_autograph_journey:
+    { name: Wells Fargo Autograph Journey, issuer: wells_fargo, program: wells_fargo, earn: { base: 1, hotels: 5, flights: 4, dining: 3, travel: 3 } }
+  wells_fargo_autograph:
+    { name: Wells Fargo Autograph, issuer: wells_fargo, program: wells_fargo, earn: { base: 1, dining: 3, travel: 3, gas: 3, transit: 3, streaming: 3, phone: 3 } }
+  wells_fargo_other:
+    { name: Wells Fargo (other), issuer: wells_fargo, program: wells_fargo, earn: { base: 1 }, watch: false }
+  bilt_mastercard:
+    { name: Bilt Mastercard, issuer: bilt, program: bilt, earn: { base: 1, dining: 3, travel: 2, rent: 1 }, watch: false }
+  discover_it:
+    { name: Discover it, issuer: discover, program: discover, earn: { base: 1 }, watch: false }

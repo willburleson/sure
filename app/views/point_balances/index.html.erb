@@ -1,0 +1,18 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title", holder: @holder, program: RewardCard::Catalog.program(@program)&.name || @program)) %>
+  <% dialog.with_body do %>
+    <ul class="divide-y divide-subdued">
+      <% @balances.each do |balance| %>
+        <li class="flex items-center justify-between gap-3 py-2 text-sm">
+          <span class="text-secondary"><%= balance.as_of.strftime("%b %-d, %Y") %></span>
+          <span class="font-medium text-primary privacy-sensitive">
+            <%= balance.catalog_program&.cash? ? number_to_currency(balance.balance) : number_with_delimiter(balance.balance.to_i) %>
+          </span>
+          <%= button_to point_balance_path(balance), method: :delete, class: "text-secondary hover:text-primary", form: { data: { turbo_frame: "_top", turbo_confirm: t(".confirm_delete") } }, aria: { label: t(".delete") } do %>
+            <%= icon("trash-2", size: "sm") %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+<% end %>

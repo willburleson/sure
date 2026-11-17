@@ -1,0 +1,121 @@
+<%= content_for :page_title, t(".title") %>
+<%= content_for :page_actions do %>
+  <%= render DS::Link.new(text: t(".add_card"), variant: "primary", href: new_reward_card_path(holder: @holder_name), icon: "plus", frame: :modal) %>
+<% end %>
+
+<div class="space-y-4 pb-6 lg:pb-12">
+  <% if @holder %>
+    <nav class="flex gap-1 bg-container-inset rounded-lg p-1 w-fit" aria-label="<%= t(".holders") %>">
+      <% @summary.holder_names.each do |name| %>
+        <%= link_to name, rewards_path(holder: name),
+              class: "px-3 py-1 rounded-md text-sm font-medium #{name == @holder_name ? "bg-container shadow-border-xs text-primary" : "text-secondary hover:text-primary"}",
+              aria: { current: (name == @holder_name ? "page" : nil) } %>
+      <% end %>
+    </nav>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="bg-container rounded-xl shadow-border-xs p-4">
+        <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t(".five_24") %></p>
+        <%= render "rewards/five_twenty_four", holder: @holder %>
+      </div>
+      <div class="bg-container rounded-xl shadow-border-xs p-4">
+        <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t(".open_cards") %></p>
+        <p class="text-2xl font-medium text-primary"><%= @holder.open_cards.size %></p>
+        <p class="text-xs text-secondary"><%= t(".total_cards", count: @holder.cards.size, closed: @holder.cards.size - @holder.open_cards.size) %></p>
+      </div>
+      <div class="bg-container rounded-xl shadow-border-xs p-4">
+        <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t(".average_age") %></p>
+        <% months = @holder.average_open_age_months %>
+        <p class="text-2xl font-medium text-primary"><%= months ? t(".years_months", years: months / 12, months: months % 12) : "–" %></p>
+        <p class="text-xs text-secondary"><%= t(".open_accounts") %></p>
+      </div>
+      <div class="bg-container rounded-xl shadow-border-xs p-4">
+        <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t(".alerts") %></p>
+        <p class="text-2xl font-medium text-primary"><%= @holder.alerts.size %></p>
+        <p class="text-xs text-secondary"><%= t(".alerts_hint") %></p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 2xl:grid-cols-2 gap-4 items-start">
+      <section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
+        <h2 class="text-lg font-medium"><%= t(".points") %></h2>
+        <p class="text-xs text-secondary"><%= t(".points_hint") %></p>
+        <%= render "rewards/points", holder: @holder %>
+      </section>
+
+      <section class="bg-container rounded-xl shadow-border-xs p-4 space-y-2">
+        <h2 class="text-lg font-medium"><%= t(".eligibility") %></h2>
+        <p class="text-xs text-secondary"><%= t(".eligibility_hint") %></p>
+        <ul class="divide-y divide-subdued">
+          <% @holder.eligibility.results.each do |result| %>
+            <li class="py-2">
+              <details>
+                <summary class="flex items-center justify-between gap-3 cursor-pointer list-none">
+                  <span class="text-sm font-medium text-primary"><%= result.product.name %></span>
+                  <%= render "rewards/status", result: result %>
+                </summary>
+                <ul class="mt-1 space-y-0.5 text-xs text-secondary">
+                  <% if result.blockers.empty? %>
+                    <li><%= t(".no_rules_apply") %></li>
+                  <% end %>
+                  <% result.blockers.each do |blocker| %>
+                    <li class="<%= "line-through opacity-60" unless blocker.active?(result.today) %>">
+                      <%= blocker.note %>
+                      <% if blocker.until.is_a?(Date) %>(<%= blocker.until.strftime("%b %-d, %Y") %>)<% end %>
+                    </li>
+                  <% end %>
+                </ul>
+              </details>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    </div>
+
+    <section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
+      <h2 class="text-lg font-medium"><%= t(".cards") %></h2>
+      <div class="bg-container-inset rounded-xl p-1 overflow-x-auto">
+        <div class="rounded-lg shadow-border-xs bg-container overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-container-inset">
+              <tr class="uppercase text-xs font-medium text-secondary">
+                <th class="px-3 py-2 text-left font-medium"><%= t(".card") %></th>
+                <th class="px-3 py-2 text-left font-medium"><%= t(".opened") %></th>
+                <th class="px-3 py-2 text-left font-medium"><%= t(".closed") %></th>
+                <th class="px-3 py-2 text-left font-medium"><%= t(".age") %></th>
+                <th class="px-3 py-2 text-left font-medium"><%= t(".counts") %></th>
+                <th class="px-3 py-2 text-left font-medium"><%= t(".earning") %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @holder.cards.reverse_each do |card| %>
+                <tr class="table-divider <%= "text-secondary" if card.closed? %>">
+                  <td class="px-3 py-2">
+                    <%= link_to card.name, edit_reward_card_path(card), class: "font-medium hover:underline", data: { turbo_frame: :modal } %>
+                    <p class="text-xs text-secondary"><%= card.issuer_name %><%= " · #{t(".business")}" if card.business? %></p>
+                  </td>
+                  <td class="px-3 py-2 whitespace-nowrap"><%= card.opened_on.strftime("%-m/%-d/%y") %></td>
+                  <td class="px-3 py-2 whitespace-nowrap"><%= card.closed? ? (card.closed_on ? card.closed_on.strftime("%-m/%-d/%y") : t(".closed_yes")) : "" %></td>
+                  <td class="px-3 py-2 whitespace-nowrap"><%= t(".years_months", years: card.age_in_months / 12, months: card.age_in_months % 12) %></td>
+                  <td class="px-3 py-2"><%= card.counts_toward_524? ? (card.opened_on + 24.months > Date.current ? t(".counts_now") : t(".counts_yes")) : "" %></td>
+                  <td class="px-3 py-2 text-xs text-secondary">
+                    <% if card.account %>
+                      <%= RewardCard::Catalog.program(card.effective_program)&.name %> · <%= card.account.name %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  <% else %>
+    <div class="bg-container rounded-xl shadow-border-xs flex justify-center items-center py-20">
+      <div class="text-center flex flex-col items-center max-w-[320px] gap-2">
+        <p class="text-primary font-medium text-sm"><%= t(".empty") %></p>
+        <%= render DS::Link.new(text: t(".add_card"), icon: "plus", href: new_reward_card_path, frame: :modal) %>
+      </div>
+    </div>
+  <% end %>
+</div>

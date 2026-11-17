@@ -1,0 +1,110 @@
+---
+en:
+  rewards:
+    index:
+      title: Cards & points
+      add_card: Add card
+      holders: Card holders
+      five_24: Chase 5/24
+      open_cards: Open cards
+      total_cards: "%{count} total, %{closed} closed"
+      average_age: Average age
+      open_accounts: Open accounts
+      years_months: "%{years}y %{months}m"
+      alerts: Alerts
+      alerts_hint: Eligible within 90 days or newly eligible
+      points: Points
+      points_hint: "Estimate = last balance entered + what linked cards earned since, from their Sure transactions at catalog earn rates (no portal or rotating bonuses). Enter the real balance to reset it."
+      eligibility: Eligibility
+      eligibility_hint: "Next application and bonus date per card, from this history and community data points on issuer rules. Check the offer terms before applying."
+      no_rules_apply: No rule blocks this card.
+      cards: Card history
+      card: Card
+      opened: Opened
+      closed: Closed
+      closed_yes: Closed
+      age: Age
+      counts: 5/24
+      counts_now: Counting
+      counts_yes: "Yes"
+      earning: Earning into
+      business: Business
+      empty: No cards yet. Add your card history to track 5/24, issuer rules and points.
+    points:
+      program: Program
+      recorded: Last entered
+      earned: Earned since
+      estimate: Estimate
+      update: Update
+      as_of: "as of %{date}"
+      no_balance: no balance entered
+      earned_title: "%{count} transactions on %{cards}"
+      new_balance: "New %{program} balance"
+      save: Save
+      balance: Balance
+      add_program: Add balance
+    status:
+      eligible: Eligible
+      newly_eligible: Newly eligible
+      on_date: "%{date}"
+      upcoming: Soon
+      waiting: Later
+      close_first: Close card first
+      never: Not eligible
+    five_24:
+      under: Under 5/24
+      over: Over 5/24
+      under_on: "Under again %{date}"
+      next_drop: "next drops %{date}"
+      slots:
+        zero: Make the next card a Chase card
+        one: 1 non-Chase card left before Chase is blocked
+        other: "%{count} non-Chase cards left before Chase is blocked"
+    alerts:
+      none: Nothing new.
+  reward_cards:
+    new:
+      title: Add card
+    edit:
+      delete: Delete card
+    create:
+      created: Card added
+    update:
+      updated: Card updated
+    destroy:
+      deleted: Card deleted
+    form:
+      holder: Holder
+      product: Card
+      custom_product: Other (not in catalog)
+      name: Name
+      name_placeholder: Defaults to the card's name
+      issuer: Issuer
+      issuer_from_product: From card
+      opened_on: Opened
+      closed_on: Closed on
+      closed: Closed
+      business: Business card
+      counts_toward_524: Counts toward 5/24
+      counts_default: Default (personal cards and Capital One business)
+      counts_yes: Counts
+      counts_no: Doesn't count
+      bonus_received: Got the sign-up bonus
+      bonus_received_on: Bonus posted on
+      bonus_received_on_help: Leave blank to assume 3 months after opening
+      account: Sure account (for points estimates)
+      no_account: None
+      program: Earns into
+      program_from_product: From card
+      base_rate: Base earn rate override
+      base_rate_placeholder: From card
+      notes: Notes
+  point_balances:
+    create:
+      saved: "%{program} balance saved"
+    destroy:
+      deleted: Balance entry deleted
+    index:
+      title: "%{holder}: %{program}"
+      delete: Delete entry
+      confirm_delete: Delete this balance entry?

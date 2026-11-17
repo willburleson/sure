@@ -1,0 +1,18 @@
+<%# locals: (rewards_summary:, **args) %>
+<div id="rewards-summary" class="px-4 pb-4 space-y-4">
+  <div class="flex justify-end">
+    <%= link_to t(".open"), rewards_path, class: "text-sm text-secondary hover:text-primary" %>
+  </div>
+  <% rewards_summary.holders.each do |holder| %>
+    <div class="space-y-2">
+      <div class="flex items-start justify-between gap-4">
+        <%= link_to holder.name, rewards_path(holder: holder.name), class: "text-sm font-medium text-primary hover:underline" %>
+        <div class="text-right"><%= render "rewards/five_twenty_four", holder: holder %></div>
+      </div>
+      <% if holder.alerts.any? %>
+        <%= render "rewards/alerts", holder: holder %>
+      <% end %>
+      <%= render "rewards/points", holder: holder, compact: true %>
+    </div>
+  <% end %>
+</div>

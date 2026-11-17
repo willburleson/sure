@@ -1,0 +1,11 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: @reward_card.name) %>
+  <% dialog.with_body do %>
+    <%= render "form", reward_card: @reward_card %>
+    <div class="mt-3">
+      <%= render DS::Button.new(text: t(".delete"), variant: "destructive", icon: "trash-2", full_width: true,
+            href: reward_card_path(@reward_card), method: :delete,
+            confirm: CustomConfirm.for_resource_deletion(@reward_card.name)) %>
+    </div>
+  <% end %>
+<% end %>

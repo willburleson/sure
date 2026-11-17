@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1944,6 +1944,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
     t.index ["plaid_id"], name: "index_plaid_items_on_plaid_id", unique: true
   end
 
+  create_table "point_balances", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.date "as_of", null: false
+    t.decimal "balance", precision: 14, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.uuid "family_id", null: false
+    t.string "holder", null: false
+    t.string "note"
+    t.string "program", null: false
+    t.datetime "updated_at", null: false
+    t.index ["family_id", "holder", "program", "as_of"], name: "index_point_balances_on_family_holder_program_as_of"
+    t.index ["family_id"], name: "index_point_balances_on_family_id"
+  end
+
   create_table "properties", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "area_unit"
     t.integer "area_value"
@@ -2230,6 +2243,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
     t.index ["inflow_transaction_id", "outflow_transaction_id"], name: "idx_on_inflow_transaction_id_outflow_transaction_id_412f8e7e26", unique: true
     t.index ["inflow_transaction_id"], name: "index_rejected_transfers_on_inflow_transaction_id"
     t.index ["outflow_transaction_id"], name: "index_rejected_transfers_on_outflow_transaction_id"
+  end
+
+  create_table "reward_cards", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "account_id"
+    t.decimal "base_rate", precision: 6, scale: 2
+    t.boolean "bonus_received", default: true, null: false
+    t.date "bonus_received_on"
+    t.boolean "business", default: false, null: false
+    t.boolean "closed", default: false, null: false
+    t.date "closed_on"
+    t.boolean "counts_toward_524"
+    t.datetime "created_at", null: false
+    t.uuid "family_id", null: false
+    t.string "holder", null: false
+    t.string "issuer", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.date "opened_on", null: false
+    t.string "product"
+    t.string "program"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_reward_cards_on_account_id"
+    t.index ["family_id", "holder"], name: "index_reward_cards_on_family_id_and_holder"
+    t.index ["family_id"], name: "index_reward_cards_on_family_id"
   end
 
   create_table "rule_actions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -3046,6 +3083,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
   add_foreign_key "plaid_accounts", "plaid_items"
   add_foreign_key "plaid_items", "families"
   add_foreign_key "plaid_items", "users", column: "owner_id", on_delete: :nullify
+  add_foreign_key "point_balances", "families"
   add_foreign_key "push_subscriptions", "users"
   add_foreign_key "questrade_accounts", "questrade_items"
   add_foreign_key "questrade_items", "families"
@@ -3069,6 +3107,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
   add_foreign_key "redbark_items", "families"
   add_foreign_key "rejected_transfers", "transactions", column: "inflow_transaction_id", on_delete: :cascade
   add_foreign_key "rejected_transfers", "transactions", column: "outflow_transaction_id", on_delete: :cascade
+  add_foreign_key "reward_cards", "accounts", on_delete: :nullify
+  add_foreign_key "reward_cards", "families"
   add_foreign_key "rule_actions", "rules"
   add_foreign_key "rule_conditions", "rule_conditions", column: "parent_id"
   add_foreign_key "rule_conditions", "rules"

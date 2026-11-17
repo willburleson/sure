@@ -1,0 +1,15 @@
+<%# locals: (holder:) %>
+<% f = holder.five_twenty_four %>
+<div class="flex items-baseline gap-2 flex-wrap">
+  <span class="text-2xl font-medium <%= f.under? ? "text-green-600" : "text-red-600" %>"><%= f.count %>/24</span>
+  <span class="text-sm font-medium <%= f.under? ? "text-green-600" : "text-red-600" %>"><%= f.under? ? t("rewards.five_24.under") : t("rewards.five_24.over") %></span>
+</div>
+<p class="text-xs text-secondary">
+  <% if !f.under? %>
+    <%= t("rewards.five_24.under_on", date: f.under_on.strftime("%b %-d, %Y")) %>
+  <% elsif f.next_drop_on %>
+    <%= t("rewards.five_24.slots", count: f.slots) %> &middot; <%= t("rewards.five_24.next_drop", date: f.next_drop_on.strftime("%b %-d, %Y")) %>
+  <% else %>
+    <%= t("rewards.five_24.slots", count: f.slots) %>
+  <% end %>
+</p>

@@ -1,0 +1,18 @@
+<%# locals: (holder:) %>
+<% if holder.alerts.any? %>
+  <ul class="divide-y divide-subdued">
+    <% holder.alerts.each do |result| %>
+      <li class="flex items-start justify-between gap-3 py-2">
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-primary"><%= result.product.name %></p>
+          <p class="text-xs text-secondary">
+            <%= (result.newly_eligible? ? result.blockers : result.active_blockers).map(&:note).to_sentence %>
+          </p>
+        </div>
+        <%= render "rewards/status", result: result %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="text-sm text-secondary py-2"><%= t("rewards.alerts.none") %></p>
+<% end %>
