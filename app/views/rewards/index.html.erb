@@ -26,6 +26,8 @@
       <%= render "rewards/needs_details", holder: @holder %>
     <% end %>
 
+    <%= render "rewards/best_next", holder: @holder %>
+
     <div class="grid grid-cols-1 2xl:grid-cols-2 gap-4 items-start">
       <section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
         <h2 class="text-lg font-medium"><%= t(".points") %></h2>

@@ -25,6 +25,11 @@ sure.willburleson.com (deployed by the private `sure-oci` repo).
    rates and rules in `config/reward_cards.yml`; logic in `app/models/reward_card/` and
    `PointBalance::Estimator`. Personal data is imported from the private `sure-oci` repo
    (`cards/`), never committed here.
+   "Best to get next" ranks eligible cards by current sign-up offer (actual points or cash,
+   Rakuten and credits as extras) and orders applications when one bonus would block another
+   (`RewardCard::Ranking`, simulating each bonus against the issuer rules). Offers come from
+   `config/reward_bonuses.yml`, which is not in the image: sure-oci mounts it and refreshes it
+   weekly from Doctor of Credit with one Haiku call (`RewardCard::Bonuses`).
 
 ## Moving to a new upstream release
 

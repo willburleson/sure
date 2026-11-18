@@ -81,6 +81,16 @@ en:
         one: Blocked (1)
         other: "Blocked (%{count})"
       have_it: You have this
+    best_next:
+      title: Best to get next
+      hint: "Cards you are eligible for now, with the current offer as actual points, miles or cash (Rakuten and other extras on separate lines). Ranked within each program, with the order to apply in."
+      reviewed: "Offers reviewed %{date}."
+      other: Other
+      spend: "Spend %{amount} in %{months} months"
+      spend_only: "Spend %{amount}"
+      fee: "%{amount} annual fee"
+      before: "Apply before %{cards}: this bonus would block it"
+      after: "Apply after %{cards}: its bonus would block this one"
     needs_details:
       title:
         one: 1 card needs details
