@@ -7,7 +7,7 @@ class RewardCard::EligibilityTest < ActiveSupport::TestCase
   end
 
   test "citi product bonus is 48 months from the last bonus" do
-    result = result_for("citi_strata_premier", [ card("citi_strata_premier", "2022-07-31", closed_on: "2023-09-14") ])
+    result = result_for("citi_aadvantage_platinum", [ card("citi_aadvantage_platinum", "2022-07-31", closed_on: "2023-09-14") ])
 
     assert_equal Date.new(2026, 10, 31), result.eligible_on
     assert_equal :eligible, result.status
@@ -16,7 +16,7 @@ class RewardCard::EligibilityTest < ActiveSupport::TestCase
   end
 
   test "upcoming when a dated rule clears within 90 days" do
-    result = result_for("citi_strata_premier", [ card("citi_strata_premier", "2022-10-01", bonus_received_on: "2022-12-20", closed_on: "2024-01-01") ])
+    result = result_for("citi_aadvantage_platinum", [ card("citi_aadvantage_platinum", "2022-10-01", bonus_received_on: "2022-12-20", closed_on: "2024-01-01") ])
 
     assert_equal :upcoming, result.status
     assert_equal Date.new(2026, 12, 20), result.eligible_on
@@ -56,6 +56,42 @@ class RewardCard::EligibilityTest < ActiveSupport::TestCase
     result = result_for("bofa_premium_rewards", [ card("bofa_premium_rewards", "2020-01-01", issuer: "bofa") ])
 
     assert_equal :close_first, result.status
+  end
+
+  test "bofa: 24 months run from closing the card" do
+    result = result_for("bofa_premium_rewards", [ card("bofa_premium_rewards", "2022-09-26", closed_on: "2025-06-01") ])
+
+    assert_equal Date.new(2027, 6, 1), result.eligible_on
+    assert_equal :waiting, result.status
+  end
+
+  test "bofa 2/3/4 ignores business cards" do
+    cards = [ card("bofa_other", "2026-10-01", business: true), card("bofa_other", "2026-11-01", business: true) ]
+
+    assert_equal :eligible, result_for("bofa_alaska", cards).status
+  end
+
+  test "wells fargo: 48 months from opening the same card, other cards unaffected" do
+    cards = [ card("wells_fargo_autograph_journey", "2025-04-04") ]
+
+    assert_equal :close_first, result_for("wells_fargo_autograph_journey", cards).status
+    closed = result_for("wells_fargo_autograph_journey", [ card("wells_fargo_autograph_journey", "2025-04-04", closed_on: "2026-01-01") ])
+    assert_equal Date.new(2029, 4, 4), closed.eligible_on
+    assert_equal :eligible, result_for("wells_fargo_autograph", cards).status
+  end
+
+  test "citi strata: no bonus if you ever had the card, including the old Premier" do
+    result = result_for("citi_strata_premier", [ card("citi_strata_premier", "2022-07-31", closed_on: "2023-09-14") ])
+
+    assert_equal :never, result.status
+  end
+
+  test "venture x bonus blocks venture for 48 months, not the reverse" do
+    venture_x = [ card("capital_one_venture_x", "2024-01-01", issuer: "capital_one") ]
+    venture = [ card("capital_one_venture", "2024-01-01", issuer: "capital_one", closed_on: "2025-01-01") ]
+
+    assert_equal Date.new(2028, 4, 1), result_for("capital_one_venture", venture_x).eligible_on
+    assert_equal :eligible, result_for("capital_one_venture_x", venture).status
   end
 
   private

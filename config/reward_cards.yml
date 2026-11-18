@@ -1,6 +1,11 @@
 # Card catalog and issuer application/bonus rules for the Cards page
 # (RewardCard::Catalog). Rules are community data points, not issuer policy:
-# check the offer's terms before applying. Last reviewed 2026-11.
+# check the offer's terms before applying. Last reviewed 2026-11-18 against:
+#   r/churning wiki "anti-churning rules" (reddit.com/r/churning/wiki/anti-churning_rules)
+#   BofA: doctorofcredit.com/bank-of-america-adds-24-month-churning-rule-per-card-alaska-cash-rewards-etc
+#   Capital One Venture/Venture X 48 months: upgradedpoints.com/news/capital-one-venture-welcome-bonus-48-month-rule
+#   Citi Strata "have or previously had" (terms changed 2026-09-20): creditodds.com/news/citi-strata-once-per-lifetime-bonus
+#   Wells Fargo 48 months per card: creditcompound.com/issuers/rules/wells-fargo
 #
 # programs: where points land. unit "points" earns rate x dollars; unit "cash"
 #   earns rate percent of dollars.
@@ -11,7 +16,8 @@
 #   velocity  max, days, scope    at most `max` new cards in `days`;
 #                                 scope issuer | issuer_personal | issuer_business | all_524
 #   cooldown  months, scope, from bonus not available until `months` after the last
-#                                 bonus (from: bonus) or account close (from: close)
+#                                 bonus (from: bonus), opening (from: open) or account
+#                                 close (from: close)
 #                                 on a card in scope (product | family | issuer)
 #   not_holding scope             must not currently hold a card in scope
 #   lifetime  scope, also         one bonus per lifetime for the scope, plus any
@@ -79,11 +85,11 @@ issuers:
   bofa:
     name: Bank of America
     rules:
-      - { type: velocity, max: 2, days: 60, scope: issuer, note: "BofA 2/3/4: 2 cards per 2 months" }
-      - { type: velocity, max: 3, days: 365, scope: issuer, note: "BofA 2/3/4: 3 cards per 12 months" }
-      - { type: velocity, max: 4, days: 730, scope: issuer, note: "BofA 2/3/4: 4 cards per 24 months" }
-      - { type: not_holding, scope: product, note: "BofA: no bonus while holding this card" }
-      - { type: cooldown, months: 24, scope: product, from: open, note: "BofA: no bonus if opened this card in the past 24 months" }
+      - { type: velocity, max: 2, days: 60, scope: issuer_personal, note: "BofA 2/3/4: 2 personal cards per 2 months" }
+      - { type: velocity, max: 3, days: 365, scope: issuer_personal, note: "BofA 2/3/4: 3 personal cards per 12 months" }
+      - { type: velocity, max: 4, days: 730, scope: issuer_personal, note: "BofA 2/3/4: 4 personal cards per 24 months" }
+      - { type: not_holding, scope: product, note: "BofA: not available while you have this card" }
+      - { type: cooldown, months: 24, scope: product, from: close, note: "BofA: not available if you had this card in the past 24 months (from closing)" }
   barclays:
     name: Barclays
     rules:
@@ -98,7 +104,8 @@ issuers:
     name: Wells Fargo
     rules:
       - { type: velocity, max: 1, days: 182, scope: issuer, note: "Wells Fargo 1 card per 6 months" }
-      - { type: cooldown, months: 15, scope: issuer, from: bonus, note: "Wells Fargo 15 months since any Wells Fargo card bonus" }
+      - { type: not_holding, scope: product, note: "Wells Fargo: no bonus while you hold this card" }
+      - { type: cooldown, months: 48, scope: product, from: open, note: "Wells Fargo: no bonus if you opened this card in the past 48 months" }
   bilt:
     name: Bilt
     rules: []
@@ -178,10 +185,12 @@ products:
   # Citi
   citi_strata_premier:
     { name: Citi Strata Premier, issuer: citi, family: citi_premier, program: citi_ty,
-      earn: { base: 1, dining: 3, groceries: 3, gas: 3, flights: 3, hotels: 3 } }
+      earn: { base: 1, dining: 3, groceries: 3, gas: 3, flights: 3, hotels: 3 },
+      rules: [ { type: lifetime, scope: family, note: "Citi Strata terms since Sep 2026: no bonus if you have or ever had this card (incl. the old Premier)" } ] }
   citi_strata_elite:
     { name: Citi Strata Elite, issuer: citi, program: citi_ty,
-      earn: { base: 1.5 } }
+      earn: { base: 1.5 },
+      rules: [ { type: lifetime, scope: product, note: "Citi Strata terms since Sep 2026: no bonus if you have or ever had this card" } ] }
   citi_double_cash:
     { name: Citi Double Cash, issuer: citi, program: citi_ty, earn: { base: 2 }, watch: false }
   citi_custom_cash:
@@ -199,7 +208,8 @@ products:
   capital_one_venture_x:
     { name: Capital One Venture X, issuer: capital_one, family: venture, program: capital_one, earn: { base: 2 } }
   capital_one_venture:
-    { name: Capital One Venture, issuer: capital_one, family: venture, program: capital_one, earn: { base: 2 } }
+    { name: Capital One Venture, issuer: capital_one, family: venture, program: capital_one, earn: { base: 2 },
+      rules: [ { type: cooldown, months: 48, scope: family, from: bonus, note: "Capital One: no Venture bonus within 48 months of a Venture or Venture X bonus" } ] }
   capital_one_quicksilver:
     { name: Capital One Quicksilver, issuer: capital_one, program: capital_one_cash, earn: { base: 1.5 }, watch: false }
   capital_one_savor:
