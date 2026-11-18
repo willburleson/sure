@@ -9,7 +9,7 @@ class RewardCard::Bonuses
     def portal? = kind == "portal"
   end
 
-  Offer = Data.define(:product_key, :amount, :unit, :spend, :months, :fee, :extras, :note) do
+  Offer = Data.define(:product_key, :amount, :unit, :spend, :months, :fee, :extras, :note, :value, :value_note) do
     def cash? = unit == "cash"
 
     # Cash from the bonus itself plus every cash extra (statement credits,
@@ -20,10 +20,21 @@ class RewardCard::Bonuses
     # among offers of the same points amount.
     def extra_cash = extras.select(&:cash?).sum(&:amount)
 
+    # Rough dollar worth of the whole offer (bonus plus extras) before the
+    # annual fee, used ONLY to put offers in one order. The Cards page shows the
+    # actual points or cash; this comes from the offers file (the page's own
+    # dollar figure when it gives one, else a typical value for that currency).
+    # Without it, cash offers use their cash and points count a cent each.
+    def worth = value || (cash? ? cash_total : amount / 100 + extra_cash)
+
+    # First-year worth: the offer minus its annual fee.
+    def net = worth - (fee || 0)
+
     def product = RewardCard::Catalog.product(product_key)
   end
 
   PATH = Rails.root.join("config/reward_bonuses.yml")
+  SOURCE_URL = "https://www.doctorofcredit.com/best-current-credit-card-sign-bonuses/"
 
   class << self
     delegate :offer, :offers, :reviewed_on, :source, to: :instance
@@ -56,7 +67,9 @@ class RewardCard::Bonuses
         extras: Array(attrs["extras"]).map do |extra|
           Extra.new(label: extra.fetch("label"), amount: extra.fetch("amount").to_i, unit: extra.fetch("unit"), kind: extra["kind"])
         end,
-        note: attrs["note"]
+        note: attrs["note"],
+        value: attrs["value"]&.to_i,
+        value_note: attrs["value_note"]
       )
     end.index_by(&:product_key)
   end

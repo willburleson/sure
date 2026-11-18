@@ -1,8 +1,8 @@
 # "Best to get next": the cards a holder is eligible for right now that have a
-# current offer, with the order to apply in. Offers are shown as the actual
-# points, miles or cash (Rakuten and other cash extras included), never
-# converted to a common value, so they are grouped by reward program and
-# ranked within each group.
+# current offer, in one list ranked best first (first-year worth: the offer's
+# rough dollar value minus its annual fee) and adjusted so a card that has to
+# wait for another goes after it. Each row still shows the actual points, miles
+# or cash (Rakuten and other cash extras included).
 #
 # Order matters when opening one card delays another longer than the reverse:
 # a Venture X bonus blocks Venture for 48 months, while a Venture only delays
@@ -23,10 +23,6 @@ class RewardCard::Ranking
 
   NEVER = Date.new(9999, 12, 31)
 
-  Group = Data.define(:program, :entries) do
-    def cash? = program.nil? || program.cash?
-  end
-
   attr_reader :eligibility, :today
 
   def initialize(eligibility, bonuses: RewardCard::Bonuses)
@@ -35,10 +31,9 @@ class RewardCard::Ranking
     @today = eligibility.today
   end
 
-  def groups
-    @groups ||= entries.group_by { |entry| entry.product.program }.map do |program_key, list|
-      Group.new(program: RewardCard::Catalog.program(program_key), entries: order(list))
-    end.sort_by { |group| [ group.cash? ? 0 : 1, -top_value(group) ] }
+  # Best first, with apply-order constraints respected.
+  def list
+    @list ||= order(entries)
   end
 
   def any? = entries.any?
@@ -84,7 +79,7 @@ class RewardCard::Ranking
       end
     end
 
-    # Highest offer first, except a card that has to wait for another one in
+    # Highest net worth first, except a card that has to wait for another one in
     # the same list is placed after it (a Kahn pass that always takes the
     # best-ranked card whose predecessors are already placed).
     def order(list)
@@ -99,13 +94,7 @@ class RewardCard::Ranking
     end
 
     def sort_key(entry)
-      offer = entry.offer
-      [ -(offer.cash? ? offer.cash_total : offer.amount), -offer.extra_cash, entry.product.name ]
-    end
-
-    def top_value(group)
-      offer = group.entries.first.offer
-      offer.cash? ? offer.cash_total : offer.amount
+      [ -entry.offer.net, -entry.offer.worth, entry.product.name ]
     end
 
     # { [first_key, second_key] => date `second` clears after `first` is opened today }.

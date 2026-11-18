@@ -82,10 +82,10 @@ en:
         other: "Blocked (%{count})"
       have_it: You have this
     best_next:
-      title: Best to get next
-      hint: "Cards you are eligible for now, with the current offer as actual points, miles or cash (Rakuten and other extras on separate lines). Ranked within each program, with the order to apply in."
+      title: Best cards to get next
+      hint: "Cards you are eligible for now, best first by rough first-year worth (offer value minus annual fee), shown as the actual points, miles or cash with Rakuten and other extras on their own lines. A card that has to wait for another goes after it."
       reviewed: "Offers reviewed %{date}."
-      other: Other
+      worth: "≈ %{amount} first year"
       spend: "Spend %{amount} in %{months} months"
       spend_only: "Spend %{amount}"
       fee: "%{amount} annual fee"
