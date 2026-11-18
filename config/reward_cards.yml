@@ -37,6 +37,7 @@ programs:
   bilt:            { name: Bilt Points, unit: points }
   bofa:            { name: Bank of America Points, unit: points }
   wells_fargo:     { name: Wells Fargo Rewards, unit: points }
+  wells_fargo_cash: { name: Wells Fargo Cash Back, unit: cash }
   us_bank:         { name: U.S. Bank Rewards, unit: points }
   discover:        { name: Discover Cashback, unit: cash }
   alaska:          { name: Alaska Atmos Rewards, unit: points }
@@ -64,18 +65,21 @@ categories:
 issuers:
   chase:
     name: Chase
+    logo: issuers/chase.png
     rules:
       - { type: five_24 }
       - { type: velocity, max: 2, days: 30, scope: issuer, note: "Chase rarely approves more than 2 cards in 30 days" }
       - { type: velocity, max: 1, days: 90, scope: issuer_business, note: "Space Ink applications about 90 days apart" }
   amex:
     name: American Express
+    logo: issuers/amex.png
     rules:
       - { type: velocity, max: 1, days: 5, scope: issuer, note: "Amex 1 card per 5 days" }
       - { type: velocity, max: 2, days: 90, scope: issuer, note: "Amex 2 credit cards per 90 days" }
       - { type: lifetime, scope: product, note: "Amex bonus once per lifetime per card (pop-up)" }
   citi:
     name: Citi
+    logo: issuers/citi.png
     rules:
       - { type: velocity, max: 1, days: 8, scope: issuer, note: "Citi 1 card per 8 days" }
       - { type: velocity, max: 2, days: 65, scope: issuer, note: "Citi 2 cards per 65 days" }
@@ -83,11 +87,13 @@ issuers:
       - { type: cooldown, months: 48, scope: product, from: bonus, note: "Citi 48 months since this card's last bonus" }
   capital_one:
     name: Capital One
+    logo: issuers/capital_one.png
     rules:
       - { type: velocity, max: 1, days: 182, scope: issuer_personal, note: "Capital One about 1 personal card per 6 months" }
       - { type: cooldown, months: 48, scope: product, from: bonus, note: "Capital One 48 months since this card's last bonus" }
   bofa:
     name: Bank of America
+    logo: issuers/bofa.png
     rules:
       - { type: velocity, max: 2, days: 60, scope: issuer_personal, note: "BofA 2/3/4: 2 personal cards per 2 months" }
       - { type: velocity, max: 3, days: 365, scope: issuer_personal, note: "BofA 2/3/4: 3 personal cards per 12 months" }
@@ -252,6 +258,8 @@ products:
     { name: Wells Fargo Autograph Journey, issuer: wells_fargo, program: wells_fargo, earn: { base: 1, hotels: 5, flights: 4, dining: 3, travel: 3 } }
   wells_fargo_autograph:
     { name: Wells Fargo Autograph, issuer: wells_fargo, program: wells_fargo, earn: { base: 1, dining: 3, travel: 3, gas: 3, transit: 3, streaming: 3, phone: 3 } }
+  wells_fargo_active_cash:
+    { name: Wells Fargo Active Cash, issuer: wells_fargo, program: wells_fargo_cash, earn: { base: 2 } }
   wells_fargo_other:
     { name: Wells Fargo (other), issuer: wells_fargo, program: wells_fargo, earn: { base: 1 }, watch: false }
   bilt_mastercard:

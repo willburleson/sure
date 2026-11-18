@@ -1,0 +1,79 @@
+<%# locals: (holder:) %>
+<% tiles = RewardCard::IssuerRules.new(holder.eligibility).tiles %>
+<% today = holder.eligibility.today %>
+<% if tiles.any? %>
+  <section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
+    <div>
+      <h2 class="text-lg font-medium"><%= t("rewards.issuers.title") %></h2>
+      <p class="text-xs text-secondary"><%= t("rewards.issuers.hint") %></p>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-start">
+      <% tiles.each do |tile| %>
+        <details class="group bg-container-inset rounded-xl p-3 open:col-span-full">
+          <summary class="list-none cursor-pointer flex items-center gap-3">
+            <%= image_tag tile.issuer.logo, alt: tile.issuer.name, class: "size-12 rounded-lg bg-white p-1 object-contain shrink-0" if tile.issuer.logo %>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-primary truncate"><%= tile.issuer.name %></p>
+              <p class="text-xs text-secondary">
+                <%= t("rewards.issuers.cards_open", count: tile.open_cards.size) %>
+                <% if tile.blocked? %>
+                  &middot; <%= t("rewards.issuers.waiting_until", date: tile.next_on.strftime("%b %-d, %Y")) if tile.next_on %>
+                <% else %>
+                  &middot; <span class="text-green-600"><%= t("rewards.issuers.clear") %></span>
+                <% end %>
+              </p>
+            </div>
+            <%= icon("chevron-down", size: "sm", class: "group-open:rotate-180 transition-transform shrink-0") %>
+          </summary>
+
+          <div class="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
+            <div class="space-y-3">
+              <% tile.lines.each do |line| %>
+                <div>
+                  <p class="text-xs uppercase font-medium text-secondary mb-1"><%= t("rewards.issuers.new_card.#{line.label}") %></p>
+                  <ul class="space-y-1 text-xs">
+                    <% line.statuses.each do |status| %>
+                      <li class="flex gap-1.5">
+                        <% if status.per_card %>
+                          <span class="text-secondary" aria-hidden="true">·</span>
+                          <span class="text-secondary"><%= status.note %> <span class="text-subdued">(<%= t("rewards.issuers.per_card") %>)</span></span>
+                        <% elsif status.clear?(today) %>
+                          <span class="text-green-600" aria-hidden="true">✓</span>
+                          <span class="text-primary"><%= status.note %></span>
+                        <% else %>
+                          <span class="text-secondary" aria-hidden="true">•</span>
+                          <span class="text-primary"><%= status.note %>
+                            <% if status.blocker.until.is_a?(Date) %> · <span class="text-secondary"><%= t("rewards.index.clears", date: status.blocker.until.strftime("%b %-d, %Y")) %></span><% end %>
+                          </span>
+                        <% end %>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+            </div>
+
+            <div>
+              <p class="text-xs uppercase font-medium text-secondary mb-1"><%= t("rewards.issuers.your_cards") %></p>
+              <% if tile.cards.any? %>
+                <ul class="space-y-1 text-xs">
+                  <% tile.cards.sort_by(&:opened_on).reverse.each do |card| %>
+                    <li class="flex justify-between gap-3 <%= "text-secondary" if card.closed? %>">
+                      <%= link_to card.display_name, edit_reward_card_path(card), class: "truncate hover:underline", data: { turbo_frame: :modal } %>
+                      <span class="text-secondary whitespace-nowrap">
+                        <%= card.opened_on.strftime("%-m/%-d/%y") %><%= " – #{card.closed_on ? card.closed_on.strftime("%-m/%-d/%y") : "?"}" if card.closed? %>
+                      </span>
+                    </li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <p class="text-xs text-secondary"><%= t("rewards.issuers.no_cards") %></p>
+              <% end %>
+            </div>
+          </div>
+        </details>
+      <% end %>
+    </div>
+  </section>
+<% end %>

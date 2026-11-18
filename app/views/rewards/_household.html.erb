@@ -24,3 +24,16 @@
     <p class="text-sm text-secondary"><%= t("rewards.household.empty") %></p>
   <% end %>
 </section>
+
+<section class="bg-container rounded-xl shadow-border-xs p-4 space-y-4">
+  <div>
+    <h2 class="text-lg font-medium"><%= t("rewards.index.points") %></h2>
+    <p class="text-xs text-secondary"><%= t("rewards.index.points_hint") %></p>
+  </div>
+  <% summary.holders.each do |holder| %>
+    <div class="space-y-2">
+      <h3 class="text-xs uppercase font-medium text-secondary"><%= holder.name %></h3>
+      <%= render "rewards/points", holder: holder %>
+    </div>
+  <% end %>
+</section>

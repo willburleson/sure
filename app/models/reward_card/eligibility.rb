@@ -47,6 +47,12 @@ class RewardCard::Eligibility
     end
   end
 
+  # One issuer-level rule for the Issuer rules section: `blocker` is nil when
+  # the rule is clear (or when it only applies to a specific card, `per_card`).
+  IssuerRuleStatus = Data.define(:note, :blocker, :per_card) do
+    def clear?(today) = blocker.nil? || !blocker.active?(today)
+  end
+
   attr_reader :cards, :today
 
   def initialize(cards, today: Date.current)
@@ -71,7 +77,31 @@ class RewardCard::Eligibility
     Result.new(product: product, blockers: rules.filter_map { |rule| evaluate(rule, product) }, today: today)
   end
 
+  # How each of an issuer's own rules (not the per-card bonus rules) treats a
+  # new personal or business card from this holder today.
+  def issuer_rule_statuses(issuer_key, business: false)
+    product = RewardCard::Catalog::Product.new(
+      key: "issuer", name: issuer_key, issuer: issuer_key, family: nil, business: business,
+      counts_toward_524: !business, program: nil, earn: {}, rules: [], watch: false
+    )
+
+    RewardCard::Catalog.issuer(issuer_key).rules.filter_map do |rule|
+      next if (rule["scope"] == "issuer_personal" && business) || (rule["scope"] == "issuer_business" && !business)
+
+      note = rule["note"] || default_note(rule)
+      if rule["type"] == "lifetime" || rule["type"] == "not_holding" || %w[product family].include?(rule["scope"])
+        IssuerRuleStatus.new(note: note, blocker: nil, per_card: true)
+      else
+        IssuerRuleStatus.new(note: note, blocker: evaluate(rule, product), per_card: false)
+      end
+    end
+  end
+
   private
+    def default_note(rule)
+      rule["type"] == "five_24" ? "Chase 5/24: no new Chase card at #{RewardCard::FiveTwentyFour::LIMIT} or more personal cards in 24 months" : rule["type"]
+    end
+
     def sort_key(result)
       rank = { upcoming: 0, eligible: 1, waiting: 2, check: 3, close_first: 4, never: 5 }.fetch(result.status)
       [ rank, result.eligible_on || Date.new(9999), result.product.name ]

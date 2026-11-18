@@ -28,15 +28,9 @@
 
     <%= render "rewards/best_next", holder: @holder %>
 
-    <div class="grid grid-cols-1 2xl:grid-cols-2 gap-4 items-start">
-      <section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
-        <h2 class="text-lg font-medium"><%= t(".points") %></h2>
-        <p class="text-xs text-secondary"><%= t(".points_hint") %></p>
-        <%= render "rewards/points", holder: @holder %>
-      </section>
+    <%= render "rewards/issuers", holder: @holder %>
 
-      <%= render "rewards/eligibility", holder: @holder %>
-    </div>
+    <%= render "rewards/eligibility", holder: @holder %>
 
     <%= render "rewards/card_history", holder: @holder, show_closed: @show_closed %>
   <% else %>

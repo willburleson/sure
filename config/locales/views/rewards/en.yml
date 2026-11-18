@@ -81,6 +81,20 @@ en:
         one: Blocked (1)
         other: "Blocked (%{count})"
       have_it: You have this
+    issuers:
+      title: Issuer rules
+      hint: "The main issuers' own application rules and where your cards leave you with each. Dates are the earliest the rule clears, from your card history."
+      cards_open:
+        one: 1 open card
+        other: "%{count} open cards"
+      waiting_until: "next card %{date}"
+      clear: clear to apply
+      your_cards: Your cards
+      no_cards: No cards from this issuer yet.
+      per_card: checked per card in the lists above
+      new_card:
+        personal: A new personal card
+        business: A new business card
     best_next:
       title: Best cards to get next
       hint: "Cards you are eligible for now, best first by rough first-year worth (offer value minus annual fee), shown as the actual points, miles or cash with Rakuten and other extras on their own lines. A card that has to wait for another goes after it."

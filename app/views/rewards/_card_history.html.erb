@@ -1,7 +1,9 @@
 <%# locals: (holder:, show_closed:) %>
 <% today = Date.current %>
 <% cards = (show_closed ? holder.open_cards.reverse + holder.closed_cards.reverse : holder.open_cards.reverse) %>
-<section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
+<%# A frame, so Show/Hide closed swaps the table in place instead of reloading the page to the top. %>
+<%= turbo_frame_tag "card-history" do %>
+<section id="open-cards" class="scroll-mt-20 bg-container rounded-xl shadow-border-xs p-4 space-y-3">
   <div class="flex items-center justify-between gap-3">
     <h2 class="text-lg font-medium"><%= t("rewards.index.cards") %></h2>
     <% if holder.closed_cards.any? %>
@@ -79,3 +81,4 @@
   </div>
   <p class="text-xs text-secondary"><%= t("rewards.history.bonus_hint") %></p>
 </section>
+<% end %>

@@ -36,7 +36,7 @@
                 <% delays.group_by(&:until).sort.each do |date, group| %>
                   <% names = group.map { |delay| delay.product.name } %>
                   <% shown = names.first(3).to_sentence + (names.size > 3 ? " " + t("rewards.best_next.more", count: names.size - 3) : "") %>
-                  <p class="text-xs text-orange-600"><%= t("rewards.best_next.#{kind}", cards: shown, date: (group.first.indefinite? ? t("rewards.best_next.indefinitely") : date.strftime("%b %-d, %Y"))) %></p>
+                  <p class="text-xs text-secondary">↳ <%= t("rewards.best_next.#{kind}", cards: shown, date: (group.first.indefinite? ? t("rewards.best_next.indefinitely") : date.strftime("%b %-d, %Y"))) %></p>
                 <% end %>
               <% end %>
               <% if offer.note.present? %>

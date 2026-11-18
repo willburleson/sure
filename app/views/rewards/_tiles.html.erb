@@ -22,11 +22,14 @@
     </ul>
   </details>
 
-  <div class="bg-container rounded-xl shadow-border-xs p-4">
-    <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t("rewards.index.open_cards") %></p>
+  <a href="#open-cards" class="block bg-container rounded-xl shadow-border-xs p-4 hover:bg-container-inset">
+    <p class="flex items-center justify-between text-xs uppercase text-secondary font-medium mb-1">
+      <%= t("rewards.index.open_cards") %>
+      <%= icon("arrow-down", size: "sm") %>
+    </p>
     <p class="text-2xl font-medium text-primary"><%= holder.open_cards.size %></p>
     <p class="text-xs text-secondary"><%= t("rewards.index.total_cards", count: holder.cards.size, closed: holder.closed_cards.size) %></p>
-  </div>
+  </a>
 
   <div class="bg-container rounded-xl shadow-border-xs p-4">
     <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t("rewards.index.average_age") %></p>

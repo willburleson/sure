@@ -19,13 +19,22 @@ class RewardsControllerTest < ActionDispatch::IntegrationTest
     get rewards_url(holder: "Pat")
     assert_response :success
     assert_select "a", text: "Sam"
-    assert_select "li a", text: /140,251 on/
+    assert_select "li a", text: /140,251 on/, count: 0   # points live on the Household tab
     assert_select "th button[data-action=\"table-sort#sort\"]", minimum: 4
     assert_select ".line-through", count: 0
     assert_select "summary", text: /Capital One Venture X/
 
     assert_select "span", text: "You have this"
     assert_select "#coming-up"
+
+    # Open cards tile jumps to the list; Show closed swaps inside a frame instead of reloading the page.
+    assert_select "a[href=\"#open-cards\"]"
+    assert_select "turbo-frame#card-history #open-cards"
+
+    # Issuer rules tiles, with logos.
+    assert_select "section h2", text: "Issuer rules"
+    assert_select "details summary img[alt=\"Chase\"]"
+    assert_select "details summary p", text: "Capital One"
 
     get root_url
     assert_response :success
@@ -41,6 +50,8 @@ class RewardsControllerTest < ActionDispatch::IntegrationTest
     get rewards_url(holder: "household")
     assert_response :success
     assert_select "p", text: "1,500"
+    assert_select "h3", text: "Pat"
+    assert_select "h3", text: "Sam"
   end
 
   test "closed cards are hidden until asked for, and cards missing details are listed" do
@@ -49,7 +60,7 @@ class RewardsControllerTest < ActionDispatch::IntegrationTest
 
     get rewards_url(holder: "Pat")
     assert_select "tbody a", text: "Old Chase", count: 0
-    assert_select "a", text: "Show 1 closed"
+    assert_select "turbo-frame#card-history a", text: "Show 1 closed"
     assert_select "details h2", text: /1 card needs details/
 
     get rewards_url(holder: "Pat", closed: "1")

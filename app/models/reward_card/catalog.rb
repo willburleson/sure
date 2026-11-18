@@ -4,7 +4,7 @@ class RewardCard::Catalog
   Program = Data.define(:key, :name, :unit) do
     def cash? = unit == "cash"
   end
-  Issuer = Data.define(:key, :name, :rules)
+  Issuer = Data.define(:key, :name, :rules, :logo)
 
   PATH = Rails.root.join("config/reward_cards.yml")
 
@@ -25,7 +25,7 @@ class RewardCard::Catalog
       [ key, Program.new(key: key, name: attrs.fetch("name"), unit: attrs.fetch("unit", "points")) ]
     end
     @issuers = data.fetch("issuers").to_h do |key, attrs|
-      [ key, Issuer.new(key: key, name: attrs.fetch("name"), rules: Array(attrs["rules"]).map(&:freeze).freeze) ]
+      [ key, Issuer.new(key: key, name: attrs.fetch("name"), rules: Array(attrs["rules"]).map(&:freeze).freeze, logo: attrs["logo"]) ]
     end
     @products = data.fetch("products").to_h do |key, attrs|
       business = attrs.fetch("business", false)
