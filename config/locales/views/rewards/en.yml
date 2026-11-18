@@ -89,8 +89,9 @@ en:
       spend: "Spend %{amount} in %{months} months"
       spend_only: "Spend %{amount}"
       fee: "%{amount} annual fee"
-      before: "Apply before %{cards}: this bonus would block it"
-      after: "Apply after %{cards}: its bonus would block this one"
+      before: "Apply before %{card}: the other way round, this card waits until %{date}"
+      after: "Apply after %{card}: getting this first would delay it until %{date}"
+      indefinitely: further notice
     needs_details:
       title:
         one: 1 card needs details

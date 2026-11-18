@@ -4,16 +4,24 @@
 # converted to a common value, so they are grouped by reward program and
 # ranked within each group.
 #
-# Order matters when one bonus would block another card but not the reverse
-# (get a Venture X bonus and the Venture bonus is blocked for 48 months, but
-# not the other way round; any non-Chase card makes a Chase app harder at 4/24).
-# That is found by pretending to open each card today and re-running the rules
-# for every other card, so it follows config/reward_cards.yml rather than a
-# hard-coded list.
+# Order matters when opening one card delays another longer than the reverse:
+# a Venture X bonus blocks Venture for 48 months, while a Venture only delays
+# Venture X by Capital One's 6-month spacing, so Venture goes first; at 4/24 any
+# non-Chase card pushes a Chase app out until a card ages off. That is found by
+# pretending to open each card today and re-running the rules for the other, so
+# it follows config/reward_cards.yml rather than a hard-coded list.
 class RewardCard::Ranking
+  # `until` is when the card named in `product` (or this card) is available
+  # again if the other order is used; NEVER when no date clears it.
+  Delay = Data.define(:product, :until) do
+    def indefinite? = self.until >= NEVER
+  end
+
   Entry = Data.define(:result, :offer, :before, :after) do
     def product = result.product
   end
+
+  NEVER = Date.new(9999, 12, 31)
 
   Group = Data.define(:program, :entries) do
     def cash? = program.nil? || program.cash?
@@ -35,9 +43,10 @@ class RewardCard::Ranking
 
   def any? = entries.any?
 
-  # True when getting `first`'s bonus today would leave `second` blocked.
-  def blocks?(first, second)
-    blocked_by_hypothetical.fetch([ first.key, second.key ])
+  # The date `second` is available again if `first` is opened today (its bonus
+  # received): today when `first` does not delay it, NEVER when no date clears it.
+  def delay(first, second)
+    delays.fetch([ first.key, second.key ])
   end
 
   private
@@ -51,10 +60,20 @@ class RewardCard::Ranking
           # Against every card you are eligible for, offer or not: a Venture
           # still goes before Venture X when only the Venture has a listed offer.
           others = results.map(&:product).reject { |product| product.key == result.product.key }
-          # This card's bonus blocks `other` (not the reverse): `other` goes first.
-          after = others.select { |other| blocks?(result.product, other) && !blocks?(other, result.product) }
-          # `other`'s bonus blocks this card (not the reverse): this card goes first.
-          before = others.select { |other| blocks?(other, result.product) && !blocks?(result.product, other) }
+          # `other` waits longer behind this card than this card waits behind
+          # `other`: this card goes first.
+          before = others.filter_map do |other|
+            mine = delay(other, result.product)
+            theirs = delay(result.product, other)
+            Delay.new(product: other, until: mine) if mine > theirs
+          end
+          # The reverse: getting this card first costs `other` more than the
+          # other order costs this one, so this card waits for it.
+          after = others.filter_map do |other|
+            mine = delay(other, result.product)
+            theirs = delay(result.product, other)
+            Delay.new(product: other, until: theirs) if theirs > mine
+          end
           Entry.new(result: result, offer: offer, before: before, after: after)
         end
       end
@@ -68,7 +87,7 @@ class RewardCard::Ranking
       placed = []
       until remaining.empty?
         keys_left = remaining.map { |entry| entry.product.key }
-        pick = remaining.find { |entry| (entry.after.map(&:key) & keys_left).empty? } || remaining.first
+        pick = remaining.find { |entry| (entry.after.map { |delay| delay.product.key } & keys_left).empty? } || remaining.first
         placed << remaining.delete(pick)
       end
       placed
@@ -84,18 +103,18 @@ class RewardCard::Ranking
       offer.cash? ? offer.cash_total : offer.amount
     end
 
-    # { [first_key, second_key] => true when opening `first` today (bonus
-    # received) leaves `second` blocked }.
-    def blocked_by_hypothetical
-      @blocked_by_hypothetical ||= begin
+    # { [first_key, second_key] => date `second` clears after `first` is opened today }.
+    def delays
+      @delays ||= begin
         candidates = eligibility.results.select { |result| result.status == :eligible }.map(&:product)
         candidates.product(candidates).to_h do |first, second|
-          next [ [ first.key, second.key ], false ] if first.key == second.key
+          next [ [ first.key, second.key ], today ] if first.key == second.key
 
           card = RewardCard.new(holder: "hypothetical", name: first.name, issuer: first.issuer, product: first.key,
                                 opened_on: today, bonus_received: true, business: first.business)
-          rerun = RewardCard::Eligibility.new(eligibility.cards + [ card ], today: today)
-          [ [ first.key, second.key ], rerun.result_for(second).active_blockers.any? ]
+          rerun = RewardCard::Eligibility.new(eligibility.cards + [ card ], today: today).result_for(second)
+          date = rerun.active_blockers.any? ? (rerun.eligible_on || NEVER) : today
+          [ [ first.key, second.key ], date ]
         end
       end
     end

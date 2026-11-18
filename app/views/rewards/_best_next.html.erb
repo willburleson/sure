@@ -32,11 +32,11 @@
                     <%= t("rewards.best_next.spend_only", amount: number_to_currency(offer.spend, precision: 0)) if offer.spend && !offer.months %>
                     <%= "· #{t("rewards.best_next.fee", amount: number_to_currency(offer.fee, precision: 0))}" if offer.fee %>
                   </p>
-                  <% if entry.before.any? %>
-                    <p class="text-xs text-orange-600"><%= t("rewards.best_next.before", cards: entry.before.map(&:name).to_sentence) %></p>
+                  <% entry.before.each do |delay| %>
+                    <p class="text-xs text-orange-600"><%= t("rewards.best_next.before", card: delay.product.name, date: (delay.indefinite? ? t("rewards.best_next.indefinitely") : delay.until.strftime("%b %-d, %Y"))) %></p>
                   <% end %>
-                  <% if entry.after.any? %>
-                    <p class="text-xs text-orange-600"><%= t("rewards.best_next.after", cards: entry.after.map(&:name).to_sentence) %></p>
+                  <% entry.after.each do |delay| %>
+                    <p class="text-xs text-orange-600"><%= t("rewards.best_next.after", card: delay.product.name, date: (delay.indefinite? ? t("rewards.best_next.indefinitely") : delay.until.strftime("%b %-d, %Y"))) %></p>
                   <% end %>
                   <% if offer.note.present? %>
                     <p class="text-xs text-secondary"><%= offer.note %></p>
