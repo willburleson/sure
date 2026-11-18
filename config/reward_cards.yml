@@ -238,10 +238,14 @@ products:
   # Others
   barclays_aadvantage_aviator:
     { name: Barclays AAdvantage Aviator Red, issuer: barclays, program: american, earn: { base: 1, flights: 2 } }
+  barclays_uber_visa:
+    { name: Barclays Uber Visa, issuer: barclays, earn: { base: 1 }, watch: false }
   barclays_other:
     { name: Barclays (other), issuer: barclays, earn: { base: 1 }, watch: false }
   us_bank_altitude_connect:
     { name: U.S. Bank Altitude Connect, issuer: us_bank, program: us_bank, earn: { base: 1, travel: 4, gas: 4, dining: 2, groceries: 2, streaming: 2 } }
+  us_bank_altitude_reserve:
+    { name: U.S. Bank Altitude Reserve, issuer: us_bank, program: us_bank, earn: { base: 1 }, watch: false }
   us_bank_other:
     { name: U.S. Bank (other), issuer: us_bank, program: us_bank, earn: { base: 1 }, watch: false }
   wells_fargo_autograph_journey:
