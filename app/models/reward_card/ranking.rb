@@ -54,12 +54,17 @@ class RewardCard::Ranking
       @entries ||= begin
         held = eligibility.cards.select(&:open?).filter_map(&:product).to_set
         results = eligibility.results.select { |result| result.status == :eligible && !held.include?(result.product.key) }
+        offered_keys = results.select { |result| @bonuses.offer(result.product.key) }.map { |result| result.product.key }
         offered = results.filter_map { |result| (offer = @bonuses.offer(result.product.key)) && [ result, offer ] }
 
         offered.map do |result, offer|
-          # Against every card you are eligible for, offer or not: a Venture
-          # still goes before Venture X when only the Venture has a listed offer.
-          others = results.map(&:product).reject { |product| product.key == result.product.key }
+          # Against the other cards on this list, and any eligible card from the
+          # same issuer whether or not it has a listed offer (a Venture still goes
+          # before Venture X when only the Venture has one). Not every eligible
+          # card: at 4/24 that would list a dozen cards under each Chase.
+          others = results.map(&:product).select do |product|
+            product.key != result.product.key && (offered_keys.include?(product.key) || product.issuer == result.product.issuer)
+          end
           # `other` waits longer behind this card than this card waits behind
           # `other`: this card goes first.
           before = others.filter_map do |other|

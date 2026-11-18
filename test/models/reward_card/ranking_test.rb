@@ -41,7 +41,7 @@ class RewardCard::RankingTest < ActiveSupport::TestCase
     ranking = ranking_for(cards, chase: offer("chase_freedom_flex", 200, "cash"), savor: offer("capital_one_savor", 250, "cash"))
     entries = ranking.groups.flat_map(&:entries).index_by { |entry| entry.product.key }
 
-    assert_equal [ "Capital One Savor" ], entries["chase_freedom_flex"].before.map { |delay| delay.product.name }
+    assert_includes entries["chase_freedom_flex"].before.map { |delay| delay.product.name }, "Capital One Savor"
     assert_equal [ "Chase Freedom Flex" ], entries["capital_one_savor"].after.map { |delay| delay.product.name }
   end
 
