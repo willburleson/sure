@@ -19,7 +19,9 @@ class RewardsControllerTest < ActionDispatch::IntegrationTest
     get rewards_url(holder: "Pat")
     assert_response :success
     assert_select "a", text: "Sam"
-    assert_select "td", text: /140,251/
+    assert_select "li", text: /140,251/
+    assert_select "th button[data-action=\"table-sort#sort\"]", minimum: 4
+    assert_select ".line-through", count: 0
     assert_select "summary", text: /Capital One Venture X/
 
     get root_url

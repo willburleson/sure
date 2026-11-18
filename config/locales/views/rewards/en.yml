@@ -18,6 +18,8 @@ en:
       eligibility: Eligibility
       eligibility_hint: "Next application and bonus date per card, from this history and community data points on issuer rules. Check the offer terms before applying."
       no_rules_apply: No rule blocks this card.
+      clears: "clears %{date}"
+      cleared: "cleared %{date}"
       cards: Card history
       card: Card
       opened: Opened
@@ -27,19 +29,19 @@ en:
       counts: 5/24
       counts_now: Counting
       counts_yes: "Yes"
+      closed_on: "Closed %{date}"
+      counting_524: Counts toward 5/24
       earning: Earning into
       business: Business
       empty: No cards yet. Add your card history to track 5/24, issuer rules and points.
     points:
       program: Program
-      recorded: Last entered
-      earned: Earned since
-      estimate: Estimate
-      update: Update
       as_of: "as of %{date}"
       no_balance: no balance entered
       earned_title: "%{count} transactions on %{cards}"
       new_balance: "New %{program} balance"
+      new_balance_placeholder: New balance
+      earned_since: "+%{amount} since"
       save: Save
       balance: Balance
       add_program: Add balance

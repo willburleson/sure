@@ -58,11 +58,19 @@
                   <% if result.blockers.empty? %>
                     <li><%= t(".no_rules_apply") %></li>
                   <% end %>
-                  <% result.blockers.each do |blocker| %>
-                    <li class="<%= "line-through opacity-60" unless blocker.active?(result.today) %>">
-                      <%= blocker.note %>
-                      <% if blocker.until.is_a?(Date) %>(<%= blocker.until.strftime("%b %-d, %Y") %>)<% end %>
-                    </li>
+                  <% result.blockers.sort_by { |blocker| blocker.active?(result.today) ? 0 : 1 }.each do |blocker| %>
+                    <% date = blocker.until.strftime("%b %-d, %Y") if blocker.until.is_a?(Date) %>
+                    <% if blocker.active?(result.today) %>
+                      <li class="flex gap-1.5">
+                        <span class="text-orange-600" aria-hidden="true">•</span>
+                        <span><%= blocker.note %><% if date %> · <span class="text-primary"><%= t(".clears", date: date) %></span><% end %></span>
+                      </li>
+                    <% else %>
+                      <li class="flex gap-1.5 text-subdued">
+                        <span class="text-green-600" aria-hidden="true">✓</span>
+                        <span><%= blocker.note %> · <%= t(".cleared", date: date) %></span>
+                      </li>
+                    <% end %>
                   <% end %>
                 </ul>
               </details>
@@ -74,31 +82,55 @@
 
     <section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
       <h2 class="text-lg font-medium"><%= t(".cards") %></h2>
-      <div class="bg-container-inset rounded-xl p-1 overflow-x-auto">
+      <div class="bg-container-inset rounded-xl p-1 overflow-x-auto" data-controller="table-sort">
         <div class="rounded-lg shadow-border-xs bg-container overflow-hidden">
           <table class="w-full text-sm">
             <thead class="bg-container-inset">
               <tr class="uppercase text-xs font-medium text-secondary">
-                <th class="px-3 py-2 text-left font-medium"><%= t(".card") %></th>
-                <th class="px-3 py-2 text-left font-medium"><%= t(".opened") %></th>
-                <th class="px-3 py-2 text-left font-medium"><%= t(".closed") %></th>
-                <th class="px-3 py-2 text-left font-medium"><%= t(".age") %></th>
-                <th class="px-3 py-2 text-left font-medium"><%= t(".counts") %></th>
-                <th class="px-3 py-2 text-left font-medium"><%= t(".earning") %></th>
+                <% [
+                     [ :name, t(".card"), "ascending", "" ],
+                     [ :opened, t(".opened"), "descending", "" ],
+                     [ :closed, t(".closed"), "descending", "hidden md:table-cell" ],
+                     [ :age, t(".age"), "descending", "" ],
+                     [ :counts, t(".counts"), "descending", "hidden md:table-cell" ]
+                   ].each do |key, label, default, classes| %>
+                  <th class="group px-3 py-2 text-left font-medium <%= classes %>" data-table-sort-target="header" <%= 'aria-sort="descending"'.html_safe if key == :opened %>>
+                    <button type="button" class="inline-flex items-center gap-1 uppercase hover:text-primary"
+                            data-action="table-sort#sort" data-table-sort-key-param="<%= key %>" data-table-sort-default-param="<%= default %>">
+                      <%= label %>
+                      <span class="hidden group-aria-[sort=ascending]:inline" aria-hidden="true">↑</span>
+                      <span class="hidden group-aria-[sort=descending]:inline" aria-hidden="true">↓</span>
+                    </button>
+                  </th>
+                <% end %>
+                <th class="hidden md:table-cell px-3 py-2 text-left font-medium"><%= t(".earning") %></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody data-table-sort-target="body">
               <% @holder.cards.reverse_each do |card| %>
-                <tr class="table-divider <%= "text-secondary" if card.closed? %>">
+                <% counting_now = card.counts_toward_524? && card.opened_on + 24.months > Date.current %>
+                <% closed_label = card.closed? ? (card.closed_on ? card.closed_on.strftime("%-m/%-d/%y") : t(".closed_yes")) : nil %>
+                <tr class="table-divider align-top <%= "text-secondary" if card.closed? %>"
+                    data-sort-name="<%= card.name.downcase %>"
+                    data-sort-opened="<%= card.opened_on.iso8601 %>"
+                    data-sort-closed="<%= card.closed? ? (card.closed_on&.iso8601 || "0") : "" %>"
+                    data-sort-age="<%= card.age_in_months %>"
+                    data-sort-counts="<%= counting_now ? 2 : (card.counts_toward_524? ? 1 : 0) %>">
                   <td class="px-3 py-2">
                     <%= link_to card.name, edit_reward_card_path(card), class: "font-medium hover:underline", data: { turbo_frame: :modal } %>
                     <p class="text-xs text-secondary"><%= card.issuer_name %><%= " · #{t(".business")}" if card.business? %></p>
+                    <p class="md:hidden text-xs text-secondary">
+                      <%= safe_join([
+                            (t(".closed_on", date: closed_label) if closed_label),
+                            (t(".counting_524") if counting_now)
+                          ].compact, " · ") %>
+                    </p>
                   </td>
                   <td class="px-3 py-2 whitespace-nowrap"><%= card.opened_on.strftime("%-m/%-d/%y") %></td>
-                  <td class="px-3 py-2 whitespace-nowrap"><%= card.closed? ? (card.closed_on ? card.closed_on.strftime("%-m/%-d/%y") : t(".closed_yes")) : "" %></td>
+                  <td class="hidden md:table-cell px-3 py-2 whitespace-nowrap"><%= closed_label %></td>
                   <td class="px-3 py-2 whitespace-nowrap"><%= t(".years_months", years: card.age_in_months / 12, months: card.age_in_months % 12) %></td>
-                  <td class="px-3 py-2"><%= card.counts_toward_524? ? (card.opened_on + 24.months > Date.current ? t(".counts_now") : t(".counts_yes")) : "" %></td>
-                  <td class="px-3 py-2 text-xs text-secondary">
+                  <td class="hidden md:table-cell px-3 py-2"><%= card.counts_toward_524? ? (counting_now ? t(".counts_now") : t(".counts_yes")) : "" %></td>
+                  <td class="hidden md:table-cell px-3 py-2 text-xs text-secondary">
                     <% if card.account %>
                       <%= RewardCard::Catalog.program(card.effective_program)&.name %> · <%= card.account.name %>
                     <% end %>
