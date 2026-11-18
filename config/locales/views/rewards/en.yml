@@ -36,7 +36,7 @@ en:
       empty: No cards yet. Add your card history to track 5/24, issuer rules and points.
     points:
       program: Program
-      as_of: "as of %{date}"
+      as_of: "on %{date}"
       no_balance: no balance entered
       earned_title: "%{count} transactions on %{cards}"
       new_balance: "New %{program} balance"

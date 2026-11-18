@@ -10,7 +10,7 @@
               <p class="font-medium text-primary"><%= estimate.catalog_program&.name || estimate.program %></p>
               <p class="text-xs text-secondary">
                 <% if estimate.as_of %>
-                  <%= link_to t("rewards.points.as_of", date: estimate.as_of.strftime("%-m/%-d/%y")), point_balances_path(holder: estimate.holder, program: estimate.program), class: "hover:text-primary", data: { turbo_frame: :modal } %>
+                  <%= link_to point_balances_path(holder: estimate.holder, program: estimate.program), class: "hover:text-primary", data: { turbo_frame: :modal } do %><span class="privacy-sensitive"><%= format.(estimate.recorded) %></span> <%= t("rewards.points.as_of", date: estimate.as_of.strftime("%-m/%-d/%y")) %><% end %>
                 <% else %>
                   <%= t("rewards.points.no_balance") %>
                 <% end %>
