@@ -2,6 +2,9 @@
 # row; the newest row per holder + program is the current balance and the
 # anchor PointBalance::Estimator adds earned points to.
 class PointBalance < ApplicationRecord
+  # Balances older than this show as stale on the Cards page.
+  STALE_AFTER = 30.days
+
   belongs_to :family
 
   normalizes :holder, :program, :note, with: ->(value) { value.strip.presence }

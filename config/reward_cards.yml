@@ -1,11 +1,7 @@
 # Card catalog and issuer application/bonus rules for the Cards page
 # (RewardCard::Catalog). Rules are community data points, not issuer policy:
-# check the offer's terms before applying. Last reviewed 2026-11-18 against:
-#   r/churning wiki "anti-churning rules" (reddit.com/r/churning/wiki/anti-churning_rules)
-#   BofA: doctorofcredit.com/bank-of-america-adds-24-month-churning-rule-per-card-alaska-cash-rewards-etc
-#   Capital One Venture/Venture X 48 months: upgradedpoints.com/news/capital-one-venture-welcome-bonus-48-month-rule
-#   Citi Strata "have or previously had" (terms changed 2026-09-20): creditodds.com/news/citi-strata-once-per-lifetime-bonus
-#   Wells Fargo 48 months per card: creditcompound.com/issuers/rules/wells-fargo
+# check the offer's terms before applying. `reviewed_on` and `sources` show on
+# the Cards page; bump the date whenever the rules are checked again.
 #
 # programs: where points land. unit "points" earns rate x dollars; unit "cash"
 #   earns rate percent of dollars.
@@ -22,6 +18,14 @@
 #   not_holding scope             must not currently hold a card in scope
 #   lifetime  scope, also         one bonus per lifetime for the scope, plus any
 #                                 products listed in `also` (Amex family rules)
+
+reviewed_on: "2026-11-18"
+sources:
+  - { name: "r/churning anti-churning rules wiki", url: "https://www.reddit.com/r/churning/wiki/anti-churning_rules/" }
+  - { name: "Doctor of Credit: BofA 24-month rule per card", url: "https://www.doctorofcredit.com/bank-of-america-adds-24-month-churning-rule-per-card-alaska-cash-rewards-etc/" }
+  - { name: "Upgraded Points: Capital One Venture 48-month rule", url: "https://upgradedpoints.com/news/capital-one-venture-welcome-bonus-48-month-rule/" }
+  - { name: "CreditOdds: Citi Strata bonus once per lifetime (Sep 2026)", url: "https://www.creditodds.com/news/citi-strata-once-per-lifetime-bonus" }
+  - { name: "Credit Compound: Wells Fargo 48-month rule", url: "https://creditcompound.com/issuers/rules/wells-fargo" }
 
 programs:
   chase_ur:        { name: Chase Ultimate Rewards, unit: points }

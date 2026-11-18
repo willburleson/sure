@@ -20,7 +20,7 @@ class PointBalancesController < ApplicationController
   def destroy
     balance = Current.family.point_balances.find(params[:id])
     balance.destroy!
-    redirect_to rewards_path(holder: balance.holder), notice: t(".deleted")
+    redirect_back_or_to rewards_path(holder: balance.holder), notice: t(".deleted")
   end
 
   private

@@ -5,6 +5,7 @@ en:
       title: Cards & points
       add_card: Add card
       holders: Card holders
+      household: Household
       five_24: Chase 5/24
       open_cards: Open cards
       total_cards: "%{count} total, %{closed} closed"
@@ -24,7 +25,6 @@ en:
       card: Card
       opened: Opened
       closed: Closed
-      closed_yes: Closed
       age: Age
       counts: 5/24
       counts_now: Counting
@@ -42,6 +42,9 @@ en:
       new_balance: "New %{program} balance"
       new_balance_placeholder: New balance
       earned_since: "+%{amount} since"
+      via: "via %{cards}"
+      stale: Over 30 days old. Enter the current balance from the issuer's site.
+      stale_short: " · update"
       save: Save
       balance: Balance
       add_program: Add balance
@@ -53,17 +56,55 @@ en:
       waiting: Later
       close_first: Close card first
       never: Not eligible
+      check: Check dates
     five_24:
       under: Under 5/24
       over: Over 5/24
       under_on: "Under again %{date}"
       next_drop: "next drops %{date}"
+      drops: "drops %{date}"
+      none_counting: No cards count right now.
       slots:
         zero: Make the next card a Chase card
         one: 1 non-Chase card left before Chase is blocked
         other: "%{count} non-Chase cards left before Chase is blocked"
     alerts:
       none: Nothing new.
+    eligibility:
+      reviewed: "Rules reviewed %{date}"
+      sources: sources
+      coming_up: Coming up
+      eligible:
+        one: Eligible (1)
+        other: "Eligible (%{count})"
+      blocked:
+        one: Blocked (1)
+        other: "Blocked (%{count})"
+      have_it: You have this
+    needs_details:
+      title:
+        one: 1 card needs details
+        other: "%{count} cards need details"
+      hint: Rules can't fully check cards without a close date or a specific card. Fix these and the eligibility dates get more accurate.
+      opened: "opened %{date}"
+      close_date: no close date
+      product: not matched to a specific card
+      fix: Fix
+    history:
+      show_closed:
+        one: Show 1 closed
+        other: "Show %{count} closed"
+      hide_closed: Hide closed
+      bonus: Bonus
+      bonus_on: "Bonus %{date}"
+      no_bonus: none
+      closed_unknown: date?
+      bonus_estimated: Estimated as 3 months after opening; set the real date on the card.
+      bonus_hint: "~ = bonus date estimated as 3 months after opening. Open a card to set the real date; the 24/48-month rules count from it."
+    household:
+      title: Household points
+      hint: Each program's estimate summed across card holders.
+      empty: No balances entered yet.
   reward_cards:
     new:
       title: Add card

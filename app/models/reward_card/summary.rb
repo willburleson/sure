@@ -5,6 +5,9 @@ class RewardCard::Summary
     def five_twenty_four = eligibility.five_twenty_four
     def alerts = eligibility.alerts
     def open_cards = cards.select(&:open?)
+    def closed_cards = cards.reject(&:open?)
+    def held_products = open_cards.filter_map(&:product).to_set
+    def needs_details = cards.select { |card| card.missing_details.any? }
 
     def average_open_age_months
       return nil if open_cards.empty?
@@ -44,6 +47,19 @@ class RewardCard::Summary
 
   def any?
     holder_names.any?
+  end
+
+  # Balances summed across holders, per program, for the Household tab.
+  HouseholdTotal = Data.define(:program, :total, :earned, :parts) do
+    def catalog_program = RewardCard::Catalog.program(program)
+    def cash? = catalog_program&.cash?
+  end
+
+  def household_totals
+    holders.flat_map(&:estimates).select(&:balance).group_by(&:program).map do |program, estimates|
+      HouseholdTotal.new(program: program, total: estimates.sum(&:total), earned: estimates.sum(&:earned),
+                         parts: estimates.map { |estimate| [ estimate.holder, estimate.total ] })
+    end.sort_by { |total| [ total.cash? ? 1 : 0, -total.total ] }
   end
 
   private

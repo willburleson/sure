@@ -1,0 +1,26 @@
+<%# locals: (summary:) %>
+<% totals = summary.household_totals %>
+<section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
+  <h2 class="text-lg font-medium"><%= t("rewards.household.title") %></h2>
+  <p class="text-xs text-secondary"><%= t("rewards.household.hint") %></p>
+  <% if totals.any? %>
+    <div class="bg-container-inset rounded-xl p-1">
+      <ul class="rounded-lg shadow-border-xs bg-container overflow-hidden text-sm">
+        <% totals.each_with_index do |total, idx| %>
+          <% format = ->(value) { total.cash? ? number_to_currency(value) : number_with_delimiter(value.to_i) } %>
+          <li class="px-3 py-3 flex items-start justify-between gap-3 <%= "table-divider" if idx < totals.size - 1 %>">
+            <div class="min-w-0">
+              <p class="font-medium text-primary"><%= total.catalog_program&.name || total.program %></p>
+              <p class="text-xs text-secondary privacy-sensitive">
+                <%= safe_join(total.parts.map { |holder, value| "#{holder} #{format.(value)}" }, " · ") %>
+              </p>
+            </div>
+            <p class="text-base font-medium text-primary privacy-sensitive whitespace-nowrap"><%= format.(total.total) %></p>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% else %>
+    <p class="text-sm text-secondary"><%= t("rewards.household.empty") %></p>
+  <% end %>
+</section>

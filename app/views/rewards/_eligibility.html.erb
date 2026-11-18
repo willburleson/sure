@@ -1,0 +1,47 @@
+<%# locals: (holder:) %>
+<% groups = holder.eligibility.results.group_by(&:group) %>
+<% held = holder.held_products %>
+<section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
+  <div>
+    <h2 class="text-lg font-medium"><%= t("rewards.index.eligibility") %></h2>
+    <p class="text-xs text-secondary"><%= t("rewards.index.eligibility_hint") %></p>
+    <details class="text-xs text-secondary mt-1">
+      <summary class="cursor-pointer w-fit hover:text-primary">
+        <%= t("rewards.eligibility.reviewed", date: RewardCard::Catalog.reviewed_on&.strftime("%b %-d, %Y") || "–") %> &middot; <%= t("rewards.eligibility.sources") %>
+      </summary>
+      <ul class="mt-1 space-y-0.5 list-disc pl-4">
+        <% RewardCard::Catalog.sources.each do |source| %>
+          <li><%= link_to source["name"], source["url"], target: "_blank", rel: "noopener", class: "underline hover:text-primary" %></li>
+        <% end %>
+      </ul>
+    </details>
+  </div>
+
+  <div id="coming-up" class="scroll-mt-20">
+    <h3 class="text-xs uppercase font-medium text-secondary"><%= t("rewards.eligibility.coming_up") %></h3>
+    <% if groups[:coming_up].present? %>
+      <ul class="divide-y divide-subdued">
+        <% groups[:coming_up].each do |result| %>
+          <%= render "rewards/eligibility_row", result: result, held: held, reason: true %>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-sm text-secondary py-2"><%= t("rewards.alerts.none") %></p>
+    <% end %>
+  </div>
+
+  <% [ [ :eligible, false ], [ :blocked, true ] ].each do |group, reason| %>
+    <% next if groups[group].blank? %>
+    <details class="group/list border-t border-subdued pt-2">
+      <summary class="list-none cursor-pointer flex items-center justify-between py-1">
+        <h3 class="text-xs uppercase font-medium text-secondary"><%= t("rewards.eligibility.#{group}", count: groups[group].size) %></h3>
+        <%= icon("chevron-down", size: "sm", class: "group-open/list:rotate-180 transition-transform") %>
+      </summary>
+      <ul class="divide-y divide-subdued">
+        <% groups[group].each do |result| %>
+          <%= render "rewards/eligibility_row", result: result, held: held, reason: reason %>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
+</section>

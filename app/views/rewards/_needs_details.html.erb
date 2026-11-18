@@ -1,0 +1,29 @@
+<%# locals: (holder:) %>
+<details class="group bg-container rounded-xl shadow-border-xs p-4">
+  <summary class="list-none cursor-pointer flex items-start justify-between gap-3">
+    <div>
+      <h2 class="text-sm font-medium text-primary flex items-center gap-2">
+        <%= icon("triangle-alert", size: "sm", color: "warning") %>
+        <%= t("rewards.needs_details.title", count: holder.needs_details.size) %>
+      </h2>
+      <p class="text-xs text-secondary mt-1"><%= t("rewards.needs_details.hint") %></p>
+    </div>
+    <%= icon("chevron-down", size: "sm", class: "mt-0.5 group-open:rotate-180 transition-transform") %>
+  </summary>
+  <ul class="mt-3 divide-y divide-subdued">
+    <% holder.needs_details.each do |card| %>
+      <li class="py-2 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-primary truncate"><%= card.display_name %></p>
+          <p class="text-xs text-secondary">
+            <%= t("rewards.needs_details.opened", date: card.opened_on.strftime("%-m/%-d/%y")) %> &middot;
+            <%= card.missing_details.map { |detail| t("rewards.needs_details.#{detail}") }.to_sentence %>
+          </p>
+        </div>
+        <%= link_to t("rewards.needs_details.fix"), edit_reward_card_path(card),
+              class: "shrink-0 text-xs font-medium px-3 py-1.5 rounded-md bg-container-inset hover:bg-container-inset-hover text-primary",
+              data: { turbo_frame: :modal } %>
+      </li>
+    <% end %>
+  </ul>
+</details>

@@ -1,0 +1,46 @@
+<%# locals: (holder:) %>
+<% f = holder.five_twenty_four %>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 items-start">
+  <details class="group bg-container rounded-xl shadow-border-xs p-4 col-span-2 lg:col-span-1">
+    <summary class="list-none cursor-pointer">
+      <p class="flex items-center justify-between text-xs uppercase text-secondary font-medium mb-1">
+        <%= t("rewards.index.five_24") %>
+        <%= icon("chevron-down", size: "sm", class: "group-open:rotate-180 transition-transform") %>
+      </p>
+      <%= render "rewards/five_twenty_four", holder: holder %>
+    </summary>
+    <ul class="mt-3 space-y-1 text-xs">
+      <% f.counted.each do |card| %>
+        <li class="flex justify-between gap-3">
+          <span class="text-primary truncate"><%= card.display_name %></span>
+          <span class="text-secondary whitespace-nowrap"><%= t("rewards.five_24.drops", date: (card.opened_on + RewardCard::FiveTwentyFour::WINDOW).strftime("%b %-d, %Y")) %></span>
+        </li>
+      <% end %>
+      <% if f.counted.empty? %>
+        <li class="text-secondary"><%= t("rewards.five_24.none_counting") %></li>
+      <% end %>
+    </ul>
+  </details>
+
+  <div class="bg-container rounded-xl shadow-border-xs p-4">
+    <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t("rewards.index.open_cards") %></p>
+    <p class="text-2xl font-medium text-primary"><%= holder.open_cards.size %></p>
+    <p class="text-xs text-secondary"><%= t("rewards.index.total_cards", count: holder.cards.size, closed: holder.closed_cards.size) %></p>
+  </div>
+
+  <div class="bg-container rounded-xl shadow-border-xs p-4">
+    <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t("rewards.index.average_age") %></p>
+    <% months = holder.average_open_age_months %>
+    <p class="text-2xl font-medium text-primary"><%= months ? t("rewards.index.years_months", years: months / 12, months: months % 12) : "–" %></p>
+    <p class="text-xs text-secondary"><%= t("rewards.index.open_accounts") %></p>
+  </div>
+
+  <a href="#coming-up" class="block bg-container rounded-xl shadow-border-xs p-4 hover:bg-container-inset col-span-2 lg:col-span-1">
+    <p class="flex items-center justify-between text-xs uppercase text-secondary font-medium mb-1">
+      <%= t("rewards.index.alerts") %>
+      <%= icon("arrow-down", size: "sm") %>
+    </p>
+    <p class="text-2xl font-medium text-primary"><%= holder.alerts.size %></p>
+    <p class="text-xs text-secondary"><%= t("rewards.index.alerts_hint") %></p>
+  </a>
+</div>

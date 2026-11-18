@@ -1,0 +1,42 @@
+<%# locals: (result:, held:, reason: false) %>
+<% active = result.active_blockers %>
+<li class="py-2">
+  <details class="group/row">
+    <summary class="flex items-start justify-between gap-3 cursor-pointer list-none">
+      <div class="min-w-0">
+        <p class="text-sm font-medium text-primary flex items-center gap-1.5 flex-wrap">
+          <%= result.product.name %>
+          <% if held.include?(result.product.key) %>
+            <span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-600 whitespace-nowrap"><%= t("rewards.eligibility.have_it") %></span>
+          <% end %>
+        </p>
+        <% if reason && active.any? %>
+          <p class="text-xs text-secondary"><%= active.first.note %><%= " +#{active.size - 1}" if active.size > 1 %></p>
+        <% end %>
+      </div>
+      <span class="flex items-center gap-1 shrink-0">
+        <%= render "rewards/status", result: result %>
+        <%= icon("chevron-down", size: "sm", class: "group-open/row:rotate-180 transition-transform") %>
+      </span>
+    </summary>
+    <ul class="mt-1 space-y-0.5 text-xs text-secondary">
+      <% if result.blockers.empty? %>
+        <li><%= t("rewards.index.no_rules_apply") %></li>
+      <% end %>
+      <% result.blockers.sort_by { |blocker| blocker.active?(result.today) ? 0 : 1 }.each do |blocker| %>
+        <% date = blocker.until.strftime("%b %-d, %Y") if blocker.until.is_a?(Date) %>
+        <% if blocker.active?(result.today) %>
+          <li class="flex gap-1.5">
+            <span class="text-orange-600" aria-hidden="true">•</span>
+            <span><%= blocker.note %><% if date %> · <span class="text-primary"><%= t("rewards.index.clears", date: date) %></span><% end %></span>
+          </li>
+        <% else %>
+          <li class="flex gap-1.5 text-subdued">
+            <span class="text-green-600" aria-hidden="true">✓</span>
+            <span><%= blocker.note %> · <%= t("rewards.index.cleared", date: date) %></span>
+          </li>
+        <% end %>
+      <% end %>
+    </ul>
+  </details>
+</li>

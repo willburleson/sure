@@ -15,10 +15,10 @@ class RewardCard::Catalog
     end
 
     delegate :products, :programs, :issuers, :product, :program, :issuer, :watched_products,
-             :category_keywords, to: :instance
+             :category_keywords, :reviewed_on, :sources, to: :instance
   end
 
-  attr_reader :products, :programs, :issuers, :category_keywords
+  attr_reader :products, :programs, :issuers, :category_keywords, :reviewed_on, :sources
 
   def initialize(data)
     @programs = data.fetch("programs").to_h do |key, attrs|
@@ -42,6 +42,8 @@ class RewardCard::Catalog
         watch: attrs.fetch("watch", true)
       ) ]
     end
+    @reviewed_on = data["reviewed_on"] && Date.parse(data["reviewed_on"].to_s)
+    @sources = Array(data["sources"]).map { |source| source.slice("name", "url").freeze }.freeze
     @category_keywords = data.fetch("categories").transform_values { |words| words.map(&:downcase) }
   end
 

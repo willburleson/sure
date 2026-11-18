@@ -24,7 +24,7 @@ class PointBalance::Estimator
     programs = (balances.keys + cards.keys.compact).uniq
 
     programs.map { |program| estimate(holder, program, balances[program], cards.fetch(program, [])) }
-            .sort_by { |estimate| -estimate.total.to_d }
+            .sort_by { |estimate| [ estimate.cash? ? 1 : 0, -estimate.total.to_d ] }
   end
 
   private

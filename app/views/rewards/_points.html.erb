@@ -4,18 +4,22 @@
     <ul class="rounded-lg shadow-border-xs bg-container overflow-hidden text-sm">
       <% holder.estimates.each_with_index do |estimate, idx| %>
         <% format = ->(value) { estimate.cash? ? number_to_currency(value) : number_with_delimiter(value.to_i) } %>
+        <% stale = estimate.as_of && estimate.as_of < Date.current - PointBalance::STALE_AFTER %>
         <li class="px-3 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 <%= "table-divider" if idx < holder.estimates.size - 1 %>">
           <div class="flex items-start justify-between gap-3 sm:flex-1 min-w-0">
             <div class="min-w-0">
               <p class="font-medium text-primary"><%= estimate.catalog_program&.name || estimate.program %></p>
               <p class="text-xs text-secondary">
                 <% if estimate.as_of %>
-                  <%= link_to point_balances_path(holder: estimate.holder, program: estimate.program), class: "hover:text-primary", data: { turbo_frame: :modal } do %><span class="privacy-sensitive"><%= format.(estimate.recorded) %></span> <%= t("rewards.points.as_of", date: estimate.as_of.strftime("%-m/%-d/%y")) %><% end %>
+                  <%= link_to point_balances_path(holder: estimate.holder, program: estimate.program), class: "hover:text-primary #{"text-warning" if stale}", title: (t("rewards.points.stale") if stale), data: { turbo_frame: :modal } do %><span class="privacy-sensitive"><%= format.(estimate.recorded) %></span> <%= t("rewards.points.as_of", date: estimate.as_of.strftime("%-m/%-d/%y")) %><%= t("rewards.points.stale_short") if stale %><% end %>
                 <% else %>
                   <%= t("rewards.points.no_balance") %>
                 <% end %>
                 <% if estimate.earned.nonzero? %>
-                  &middot; <span class="privacy-sensitive" title="<%= t("rewards.points.earned_title", count: estimate.transaction_count, cards: estimate.cards.map(&:name).to_sentence) %>"><%= t("rewards.points.earned_since", amount: format.(estimate.earned)) %></span>
+                  &middot; <span class="privacy-sensitive" title="<%= t("rewards.points.earned_title", count: estimate.transaction_count, cards: estimate.cards.map(&:display_name).to_sentence) %>"><%= t("rewards.points.earned_since", amount: format.(estimate.earned)) %></span>
+                <% end %>
+                <% if !compact && estimate.cards.any? %>
+                  &middot; <%= t("rewards.points.via", cards: estimate.cards.map(&:display_name).to_sentence) %>
                 <% end %>
               </p>
             </div>

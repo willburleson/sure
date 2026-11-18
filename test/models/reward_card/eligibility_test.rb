@@ -94,6 +94,21 @@ class RewardCard::EligibilityTest < ActiveSupport::TestCase
     assert_equal :eligible, result_for("capital_one_venture_x", venture).status
   end
 
+  test "a closed card with no close date makes from-closing rules ask for the date" do
+    result = result_for("bofa_premium_rewards", [ card("bofa_premium_rewards", "2022-06-17", closed: true) ])
+
+    assert_equal :check, result.status
+    assert_nil result.eligible_on
+    assert_equal :blocked, result.group
+    assert_match(/add the close date/, result.active_blockers.first.note)
+  end
+
+  test "groups: coming up, eligible, blocked" do
+    assert_equal :coming_up, result_for("citi_aadvantage_platinum", [ card("citi_aadvantage_platinum", "2022-07-31", closed_on: "2023-09-14") ]).group
+    assert_equal :eligible, result_for("citi_custom_cash", []).group
+    assert_equal :blocked, result_for("amex_gold", [ card("amex_gold", "2015-03-18", closed_on: "2016-05-07") ]).group
+  end
+
   private
     def result_for(product, cards)
       RewardCard::Eligibility.new(cards, today: @today).result_for(RewardCard::Catalog.product(product))
@@ -103,7 +118,7 @@ class RewardCard::EligibilityTest < ActiveSupport::TestCase
       issuer ||= RewardCard::Catalog.product(product).issuer
       @family.reward_cards.new({
         holder: "A", name: "Card", issuer: issuer, product: product, opened_on: Date.parse(opened),
-        closed_on: closed_on && Date.parse(closed_on), closed: closed_on.present?
+        closed_on: closed_on && Date.parse(closed_on), closed: closed_on.present? || attrs.delete(:closed).present?
       }.merge(attrs.transform_values { |v| v.is_a?(String) && v.match?(/\A\d{4}-/) ? Date.parse(v) : v }))
     end
 end

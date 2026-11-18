@@ -4,37 +4,27 @@
 <% end %>
 
 <div class="space-y-4 pb-6 lg:pb-12">
-  <% if @holder %>
-    <nav class="flex gap-1 bg-container-inset rounded-lg p-1 w-fit" aria-label="<%= t(".holders") %>">
-      <% @summary.holder_names.each do |name| %>
-        <%= link_to name, rewards_path(holder: name),
-              class: "px-3 py-1 rounded-md text-sm font-medium #{name == @holder_name ? "bg-container shadow-border-xs text-primary" : "text-secondary hover:text-primary"}",
-              aria: { current: (name == @holder_name ? "page" : nil) } %>
+  <% if @summary.any? %>
+    <nav class="flex gap-1 bg-container-inset rounded-lg p-1 w-fit max-w-full overflow-x-auto" aria-label="<%= t(".holders") %>">
+      <% tabs = @summary.holder_names.map { |name| [ name, name ] } %>
+      <% tabs << [ t(".household"), RewardsController::HOUSEHOLD ] if @summary.holder_names.size > 1 %>
+      <% tabs.each do |label, value| %>
+        <% active = @household ? value == RewardsController::HOUSEHOLD : value == @holder_name %>
+        <%= link_to label, rewards_path(holder: value),
+              class: "px-3 py-1 rounded-md text-sm font-medium whitespace-nowrap #{active ? "bg-container shadow-border-xs text-primary" : "text-secondary hover:text-primary"}",
+              aria: { current: (active ? "page" : nil) } %>
       <% end %>
     </nav>
+  <% end %>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <div class="bg-container rounded-xl shadow-border-xs p-4">
-        <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t(".five_24") %></p>
-        <%= render "rewards/five_twenty_four", holder: @holder %>
-      </div>
-      <div class="bg-container rounded-xl shadow-border-xs p-4">
-        <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t(".open_cards") %></p>
-        <p class="text-2xl font-medium text-primary"><%= @holder.open_cards.size %></p>
-        <p class="text-xs text-secondary"><%= t(".total_cards", count: @holder.cards.size, closed: @holder.cards.size - @holder.open_cards.size) %></p>
-      </div>
-      <div class="bg-container rounded-xl shadow-border-xs p-4">
-        <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t(".average_age") %></p>
-        <% months = @holder.average_open_age_months %>
-        <p class="text-2xl font-medium text-primary"><%= months ? t(".years_months", years: months / 12, months: months % 12) : "–" %></p>
-        <p class="text-xs text-secondary"><%= t(".open_accounts") %></p>
-      </div>
-      <div class="bg-container rounded-xl shadow-border-xs p-4">
-        <p class="text-xs uppercase text-secondary font-medium mb-1"><%= t(".alerts") %></p>
-        <p class="text-2xl font-medium text-primary"><%= @holder.alerts.size %></p>
-        <p class="text-xs text-secondary"><%= t(".alerts_hint") %></p>
-      </div>
-    </div>
+  <% if @household %>
+    <%= render "rewards/household", summary: @summary %>
+  <% elsif @holder %>
+    <%= render "rewards/tiles", holder: @holder %>
+
+    <% if @holder.needs_details.any? %>
+      <%= render "rewards/needs_details", holder: @holder %>
+    <% end %>
 
     <div class="grid grid-cols-1 2xl:grid-cols-2 gap-4 items-start">
       <section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
@@ -43,105 +33,10 @@
         <%= render "rewards/points", holder: @holder %>
       </section>
 
-      <section class="bg-container rounded-xl shadow-border-xs p-4 space-y-2">
-        <h2 class="text-lg font-medium"><%= t(".eligibility") %></h2>
-        <p class="text-xs text-secondary"><%= t(".eligibility_hint") %></p>
-        <ul class="divide-y divide-subdued">
-          <% @holder.eligibility.results.each do |result| %>
-            <li class="py-2">
-              <details>
-                <summary class="flex items-center justify-between gap-3 cursor-pointer list-none">
-                  <span class="text-sm font-medium text-primary"><%= result.product.name %></span>
-                  <%= render "rewards/status", result: result %>
-                </summary>
-                <ul class="mt-1 space-y-0.5 text-xs text-secondary">
-                  <% if result.blockers.empty? %>
-                    <li><%= t(".no_rules_apply") %></li>
-                  <% end %>
-                  <% result.blockers.sort_by { |blocker| blocker.active?(result.today) ? 0 : 1 }.each do |blocker| %>
-                    <% date = blocker.until.strftime("%b %-d, %Y") if blocker.until.is_a?(Date) %>
-                    <% if blocker.active?(result.today) %>
-                      <li class="flex gap-1.5">
-                        <span class="text-orange-600" aria-hidden="true">•</span>
-                        <span><%= blocker.note %><% if date %> · <span class="text-primary"><%= t(".clears", date: date) %></span><% end %></span>
-                      </li>
-                    <% else %>
-                      <li class="flex gap-1.5 text-subdued">
-                        <span class="text-green-600" aria-hidden="true">✓</span>
-                        <span><%= blocker.note %> · <%= t(".cleared", date: date) %></span>
-                      </li>
-                    <% end %>
-                  <% end %>
-                </ul>
-              </details>
-            </li>
-          <% end %>
-        </ul>
-      </section>
+      <%= render "rewards/eligibility", holder: @holder %>
     </div>
 
-    <section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
-      <h2 class="text-lg font-medium"><%= t(".cards") %></h2>
-      <div class="bg-container-inset rounded-xl p-1 overflow-x-auto" data-controller="table-sort">
-        <div class="rounded-lg shadow-border-xs bg-container overflow-hidden">
-          <table class="w-full text-sm">
-            <thead class="bg-container-inset">
-              <tr class="uppercase text-xs font-medium text-secondary">
-                <% [
-                     [ :name, t(".card"), "ascending", "" ],
-                     [ :opened, t(".opened"), "descending", "" ],
-                     [ :closed, t(".closed"), "descending", "hidden md:table-cell" ],
-                     [ :age, t(".age"), "descending", "" ],
-                     [ :counts, t(".counts"), "descending", "hidden md:table-cell" ]
-                   ].each do |key, label, default, classes| %>
-                  <th class="group px-3 py-2 text-left font-medium <%= classes %>" data-table-sort-target="header" <%= 'aria-sort="descending"'.html_safe if key == :opened %>>
-                    <button type="button" class="inline-flex items-center gap-1 uppercase hover:text-primary"
-                            data-action="table-sort#sort" data-table-sort-key-param="<%= key %>" data-table-sort-default-param="<%= default %>">
-                      <%= label %>
-                      <span class="hidden group-aria-[sort=ascending]:inline" aria-hidden="true">↑</span>
-                      <span class="hidden group-aria-[sort=descending]:inline" aria-hidden="true">↓</span>
-                    </button>
-                  </th>
-                <% end %>
-                <th class="hidden md:table-cell px-3 py-2 text-left font-medium"><%= t(".earning") %></th>
-              </tr>
-            </thead>
-            <tbody data-table-sort-target="body">
-              <% @holder.cards.reverse_each do |card| %>
-                <% counting_now = card.counts_toward_524? && card.opened_on + 24.months > Date.current %>
-                <% closed_label = card.closed? ? (card.closed_on ? card.closed_on.strftime("%-m/%-d/%y") : t(".closed_yes")) : nil %>
-                <tr class="table-divider align-top <%= "text-secondary" if card.closed? %>"
-                    data-sort-name="<%= card.name.downcase %>"
-                    data-sort-opened="<%= card.opened_on.iso8601 %>"
-                    data-sort-closed="<%= card.closed? ? (card.closed_on&.iso8601 || "0") : "" %>"
-                    data-sort-age="<%= card.age_in_months %>"
-                    data-sort-counts="<%= counting_now ? 2 : (card.counts_toward_524? ? 1 : 0) %>">
-                  <td class="px-3 py-2">
-                    <%= link_to card.name, edit_reward_card_path(card), class: "font-medium hover:underline", data: { turbo_frame: :modal } %>
-                    <p class="text-xs text-secondary"><%= card.issuer_name %><%= " · #{t(".business")}" if card.business? %></p>
-                    <p class="md:hidden text-xs text-secondary">
-                      <%= safe_join([
-                            (t(".closed_on", date: closed_label) if closed_label),
-                            (t(".counting_524") if counting_now)
-                          ].compact, " · ") %>
-                    </p>
-                  </td>
-                  <td class="px-3 py-2 whitespace-nowrap"><%= card.opened_on.strftime("%-m/%-d/%y") %></td>
-                  <td class="hidden md:table-cell px-3 py-2 whitespace-nowrap"><%= closed_label %></td>
-                  <td class="px-3 py-2 whitespace-nowrap"><%= t(".years_months", years: card.age_in_months / 12, months: card.age_in_months % 12) %></td>
-                  <td class="hidden md:table-cell px-3 py-2"><%= card.counts_toward_524? ? (counting_now ? t(".counts_now") : t(".counts_yes")) : "" %></td>
-                  <td class="hidden md:table-cell px-3 py-2 text-xs text-secondary">
-                    <% if card.account %>
-                      <%= RewardCard::Catalog.program(card.effective_program)&.name %> · <%= card.account.name %>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+    <%= render "rewards/card_history", holder: @holder, show_closed: @show_closed %>
   <% else %>
     <div class="bg-container rounded-xl shadow-border-xs flex justify-center items-center py-20">
       <div class="text-center flex flex-col items-center max-w-[320px] gap-2">

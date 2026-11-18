@@ -26,6 +26,36 @@ class RewardCard < ApplicationRecord
     RewardCard::Catalog.product(product)
   end
 
+  # "(other)" placeholder products and custom cards: the rules can't tell
+  # which card this was.
+  def generic_product?
+    catalog_product.nil? || catalog_product.key.end_with?("_other")
+  end
+
+  # The catalog card's name; the name typed in (often the old sheet's label)
+  # only when there is no specific catalog card.
+  def display_name
+    generic_product? ? name : catalog_product.name
+  end
+
+  # The typed-in name when it adds something beyond the catalog name.
+  def nickname
+    name unless generic_product? || name == catalog_product.name
+  end
+
+  def closed_date_unknown?
+    closed? && closed_on.nil?
+  end
+
+  def bonus_estimated?
+    bonus_received? && bonus_received_on.nil?
+  end
+
+  # What to fix so the rules can use this card.
+  def missing_details
+    [ (:close_date if closed_date_unknown?), (:product if generic_product?) ].compact
+  end
+
   def issuer_name
     RewardCard::Catalog.issuer(issuer).name
   end
@@ -65,6 +95,14 @@ class RewardCard < ApplicationRecord
 
   def age_in_months(today = Date.current)
     (today.year * 12 + today.month) - (opened_on.year * 12 + opened_on.month) - (today.day < opened_on.day ? 1 : 0)
+  end
+
+  # Months the card was (or has been) open; nil for a closed card with no
+  # close date.
+  def held_months(today = Date.current)
+    return age_in_months(today) if open?
+
+    age_in_months(closed_on) if closed_on
   end
 
   private

@@ -2,7 +2,8 @@
 # product, from that holder's card history and the rules in
 # config/reward_cards.yml. Each rule yields a Blocker: a date it clears
 # (past dates are kept so "newly eligible" can be shown), :close when a card
-# must be closed first, or :never.
+# must be closed first, :never, or :unknown when a rule needs a close date
+# the history doesn't have.
 class RewardCard::Eligibility
   UPCOMING_WINDOW = 90.days
   RECENT_WINDOW = 30.days
@@ -23,6 +24,7 @@ class RewardCard::Eligibility
     def status
       return :never if blockers.any? { |blocker| blocker.until == :never }
       return :close_first if blockers.any? { |blocker| blocker.until == :close }
+      return :check if blockers.any? { |blocker| blocker.until == :unknown }
       return :eligible if eligible_on <= today
       return :upcoming if eligible_on <= today + UPCOMING_WINDOW
 
@@ -35,6 +37,14 @@ class RewardCard::Eligibility
     end
 
     def alert? = status == :upcoming || newly_eligible?
+
+    # Which list the Cards page shows it in.
+    def group
+      return :coming_up if alert?
+      return :eligible if status == :eligible
+
+      :blocked
+    end
   end
 
   attr_reader :cards, :today
@@ -63,7 +73,7 @@ class RewardCard::Eligibility
 
   private
     def sort_key(result)
-      rank = { upcoming: 0, eligible: 1, waiting: 2, close_first: 3, never: 4 }.fetch(result.status)
+      rank = { upcoming: 0, eligible: 1, waiting: 2, check: 3, close_first: 4, never: 5 }.fetch(result.status)
       [ rank, result.eligible_on || Date.new(9999), result.product.name ]
     end
 
@@ -105,7 +115,12 @@ class RewardCard::Eligibility
     end
 
     def cooldown(rule, product, note)
-      dates = in_scope(rule["scope"], product).filter_map do |card|
+      scoped = in_scope(rule["scope"], product)
+      if rule.fetch("from") == "close" && (undated = scoped.select(&:closed_date_unknown?)).any?
+        return Blocker.new(note: "#{note}: add the close date for #{undated.map(&:display_name).uniq.to_sentence}", until: :unknown)
+      end
+
+      dates = scoped.filter_map do |card|
         case rule.fetch("from")
         when "bonus" then card.bonus_on
         when "open" then card.opened_on

@@ -1,0 +1,81 @@
+<%# locals: (holder:, show_closed:) %>
+<% today = Date.current %>
+<% cards = (show_closed ? holder.open_cards.reverse + holder.closed_cards.reverse : holder.open_cards.reverse) %>
+<section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3">
+  <div class="flex items-center justify-between gap-3">
+    <h2 class="text-lg font-medium"><%= t("rewards.index.cards") %></h2>
+    <% if holder.closed_cards.any? %>
+      <%= link_to (show_closed ? t("rewards.history.hide_closed") : t("rewards.history.show_closed", count: holder.closed_cards.size)),
+            rewards_path(holder: holder.name, closed: (show_closed ? nil : "1")),
+            class: "text-sm text-secondary hover:text-primary" %>
+    <% end %>
+  </div>
+  <div class="bg-container-inset rounded-xl p-1 overflow-x-auto" data-controller="table-sort">
+    <div class="rounded-lg shadow-border-xs bg-container overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-container-inset">
+          <tr class="uppercase text-xs font-medium text-secondary">
+            <% [
+                 [ :name, t("rewards.index.card"), "ascending", "" ],
+                 [ :opened, t("rewards.index.opened"), "descending", "" ],
+                 [ :closed, t("rewards.index.closed"), "descending", "hidden md:table-cell" ],
+                 [ :age, t("rewards.index.age"), "descending", "" ],
+                 [ :bonus, t("rewards.history.bonus"), "descending", "hidden md:table-cell" ],
+                 [ :counts, t("rewards.index.counts"), "descending", "hidden md:table-cell" ]
+               ].each do |key, label, default, classes| %>
+              <th class="group px-3 py-2 text-left font-medium <%= classes %>" data-table-sort-target="header">
+                <button type="button" class="inline-flex items-center gap-1 uppercase hover:text-primary"
+                        data-action="table-sort#sort" data-table-sort-key-param="<%= key %>" data-table-sort-default-param="<%= default %>">
+                  <%= label %>
+                  <span class="hidden group-aria-[sort=ascending]:inline" aria-hidden="true">↑</span>
+                  <span class="hidden group-aria-[sort=descending]:inline" aria-hidden="true">↓</span>
+                </button>
+              </th>
+            <% end %>
+            <th class="hidden md:table-cell px-3 py-2 text-left font-medium"><%= t("rewards.index.earning") %></th>
+          </tr>
+        </thead>
+        <tbody data-table-sort-target="body">
+          <% cards.each do |card| %>
+            <% counting_now = card.counts_toward_524? && card.opened_on + 24.months > today %>
+            <% closed_label = card.closed? ? (card.closed_on ? card.closed_on.strftime("%-m/%-d/%y") : t("rewards.history.closed_unknown")) : nil %>
+            <% bonus_label = card.bonus_on ? "#{"~" if card.bonus_estimated?}#{card.bonus_on.strftime("%-m/%-d/%y")}" : t("rewards.history.no_bonus") %>
+            <% months = card.held_months(today) %>
+            <tr class="table-divider align-top <%= "text-secondary" if card.closed? %>"
+                data-sort-name="<%= card.display_name.downcase %>"
+                data-sort-opened="<%= card.opened_on.iso8601 %>"
+                data-sort-closed="<%= card.closed? ? (card.closed_on&.iso8601 || "0") : "" %>"
+                data-sort-age="<%= months %>"
+                data-sort-bonus="<%= card.bonus_on&.iso8601 %>"
+                data-sort-counts="<%= counting_now ? 2 : (card.counts_toward_524? ? 1 : 0) %>">
+              <td class="px-3 py-2">
+                <%= link_to card.display_name, edit_reward_card_path(card), class: "font-medium hover:underline", data: { turbo_frame: :modal } %>
+                <p class="text-xs text-secondary">
+                  <%= card.issuer_name %><%= " · #{t("rewards.index.business")}" if card.business? %><%= " · “#{card.nickname}”" if card.nickname %>
+                </p>
+                <p class="md:hidden text-xs text-secondary">
+                  <%= safe_join([
+                        (t("rewards.index.closed_on", date: closed_label) if closed_label),
+                        t("rewards.history.bonus_on", date: bonus_label),
+                        (t("rewards.index.counting_524") if counting_now)
+                      ].compact, " · ") %>
+                </p>
+              </td>
+              <td class="px-3 py-2 whitespace-nowrap"><%= card.opened_on.strftime("%-m/%-d/%y") %></td>
+              <td class="hidden md:table-cell px-3 py-2 whitespace-nowrap <%= "text-warning" if card.closed_date_unknown? %>"><%= closed_label %></td>
+              <td class="px-3 py-2 whitespace-nowrap"><%= months ? t("rewards.index.years_months", years: months / 12, months: months % 12) : "–" %></td>
+              <td class="hidden md:table-cell px-3 py-2 whitespace-nowrap" title="<%= t("rewards.history.bonus_estimated") if card.bonus_estimated? %>"><%= bonus_label %></td>
+              <td class="hidden md:table-cell px-3 py-2"><%= card.counts_toward_524? ? (counting_now ? t("rewards.index.counts_now") : t("rewards.index.counts_yes")) : "" %></td>
+              <td class="hidden md:table-cell px-3 py-2 text-xs text-secondary">
+                <% if card.account %>
+                  <%= RewardCard::Catalog.program(card.effective_program)&.name %> · <%= card.account.name %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-xs text-secondary"><%= t("rewards.history.bonus_hint") %></p>
+</section>

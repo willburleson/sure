@@ -42,7 +42,13 @@ class RewardCardsController < ApplicationController
         :bonus_received, :bonus_received_on, :program, :base_rate, :notes
       )
       permitted[:counts_toward_524] = nil if permitted[:counts_toward_524] == ""
-      permitted[:closed] = "1" if permitted[:closed_on].present?
+      # Turning "Closed" off on a closed card reopens it (and drops the close
+      # date); otherwise a close date implies closed.
+      if permitted[:closed] == "0" && @reward_card&.closed?
+        permitted[:closed_on] = nil
+      elsif permitted[:closed_on].present?
+        permitted[:closed] = "1"
+      end
 
       # Only the family's own accounts can be linked.
       if params[:reward_card].key?(:account_id)
