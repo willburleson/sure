@@ -99,7 +99,7 @@ class RewardCard::Eligibility
 
   private
     def default_note(rule)
-      rule["type"] == "five_24" ? "Chase 5/24: no new Chase card at #{RewardCard::FiveTwentyFour::LIMIT} or more personal cards in 24 months" : rule["type"]
+      rule["type"] == "five_24" ? "Chase 5/24: no new Chase card at #{RewardCard::FiveTwentyFour::LIMIT} or more personal cards in the last 24 months (counted with a one-month buffer)" : rule["type"]
     end
 
     def sort_key(result)
@@ -114,7 +114,7 @@ class RewardCard::Eligibility
       when "five_24"
         return nil if five_twenty_four.under?
 
-        Blocker.new(note: rule["note"] || "Over 5/24 (#{five_twenty_four.count} cards in 24 months)", until: five_twenty_four.under_on)
+        Blocker.new(note: rule["note"] || "Over 5/24 (#{five_twenty_four.count} cards in the last 24 months, plus a month's buffer)", until: five_twenty_four.under_on)
       when "velocity"
         velocity(rule, product, note)
       when "cooldown"

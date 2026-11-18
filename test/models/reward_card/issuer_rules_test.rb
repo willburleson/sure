@@ -17,7 +17,7 @@ class RewardCard::IssuerRulesTest < ActiveSupport::TestCase
 
     assert_not under.blocked?
     assert over.blocked?
-    assert_equal Date.new(2027, 1, 8), over.next_on
+    assert_equal Date.new(2027, 2, 8), over.next_on
   end
 
   test "capital one personal card spacing counts your last personal card" do

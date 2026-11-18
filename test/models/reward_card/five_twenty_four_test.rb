@@ -6,18 +6,19 @@ class RewardCard::FiveTwentyFourTest < ActiveSupport::TestCase
     @today = Date.new(2026, 11, 17)
   end
 
-  test "counts personal cards opened in the last 24 months" do
+  test "counts personal cards opened in the last 25 months (24 plus a one-month buffer)" do
     cards = [
-      card("2024-11-18"), card("2025-01-08"), card("2025-02-06"), card("2025-04-04"),
-      card("2024-11-17"),                       # exactly 24 months ago: dropped off today
+      card("2024-10-18"), card("2025-01-08"), card("2025-02-06"), card("2025-04-04"),
+      card("2024-10-17"),                       # exactly 25 months ago: dropped off today
+      card("2024-11-04", product: "chase_ink_unlimited", business: true, counts_toward_524: true), # per-card override
       card("2025-06-01", business: true),       # business cards don't report
       card("2025-07-01", product: "capital_one_spark_cash", business: true) # Capital One business does
     ]
     f = RewardCard::FiveTwentyFour.new(cards, today: @today)
 
-    assert_equal 5, f.count
+    assert_equal 6, f.count
     assert_not f.under?
-    assert_equal Date.new(2026, 11, 18), f.under_on
+    assert_equal Date.new(2026, 12, 4), f.under_on # second-oldest counted card (11/4/24) ages off after 25 months
     assert_equal 0, f.slots
   end
 
@@ -26,7 +27,7 @@ class RewardCard::FiveTwentyFourTest < ActiveSupport::TestCase
 
     assert f.under?
     assert_equal 2, f.slots
-    assert_equal Date.new(2027, 1, 8), f.next_drop_on
+    assert_equal Date.new(2027, 2, 8), f.next_drop_on
     assert_equal @today, f.under_on
   end
 

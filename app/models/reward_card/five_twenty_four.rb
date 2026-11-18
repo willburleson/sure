@@ -1,10 +1,11 @@
 # Chase 5/24 for one holder: cards opened in the last 24 months that report to
-# personal credit. A card stops counting on the 24-month anniversary of its
-# open date (some data points say the first of the following month, so treat
-# the dates as earliest-possible).
+# personal credit. Issuers disagree on when a card stops counting (exactly 24
+# months, or the first of the following month, and some count tradelines a bit
+# longer), so the window carries a one-month buffer: a card counts until 25
+# months after it opened. The dates shown are the earliest you are safe.
 class RewardCard::FiveTwentyFour
   LIMIT = 5
-  WINDOW = 24.months
+  WINDOW = 25.months
 
   attr_reader :cards, :today
 

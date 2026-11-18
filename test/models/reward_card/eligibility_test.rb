@@ -26,7 +26,7 @@ class RewardCard::EligibilityTest < ActiveSupport::TestCase
     cards = %w[2025-01-08 2025-02-06 2025-04-04 2025-10-24 2026-03-01].map { |date| card(nil, date, issuer: "citi") }
     result = result_for("chase_sapphire_reserve", cards)
 
-    assert_equal Date.new(2027, 1, 8), result.eligible_on
+    assert_equal Date.new(2027, 2, 8), result.eligible_on
     assert_equal :upcoming, result.status
   end
 
