@@ -86,6 +86,20 @@ module Account::Linkable
     account_providers.exists?(provider_type: CATEGORY_MATCHER_PROVIDER_TYPES)
   end
 
+  # When the provider last pulled fresh data from the institution, for the
+  # sidebar's "last refreshed" column. Sure's own sync time is not that: the
+  # daily sync completes for every account even when the bank side is days
+  # stale. SimpleFIN reports the real time per account (balance-date); other
+  # providers fall back to the last completed sync. Nil for manual accounts.
+  # Reads loaded associations so the preloaded sidebar does no extra queries.
+  def data_refreshed_at
+    return nil if unlinked?
+
+    simplefin = simplefin_account ||
+      account_providers.find { |ap| ap.provider_type == "SimplefinAccount" }&.provider
+    simplefin&.balance_date || last_synced_at
+  end
+
   # Check if holdings can be deleted
   # If account has multiple providers, returns true only if ALL providers allow deletion
   # This prevents deleting holdings that would be recreated on next sync

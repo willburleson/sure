@@ -156,4 +156,29 @@ class Account::LinkableTest < ActiveSupport::TestCase
     assert @account.unlinked?
     refute_includes Account.linked, @account
   end
+
+  test "data_refreshed_at is nil for manual accounts" do
+    assert_nil @account.data_refreshed_at
+  end
+
+  test "data_refreshed_at uses SimpleFIN balance date, not the Sure sync time" do
+    item = SimplefinItem.create!(family: @family, name: "SF", access_url: "https://example.com/access")
+    balance_date = 3.days.ago.change(usec: 0)
+    sfa = SimplefinAccount.create!(
+      simplefin_item: item, name: "Checking", account_id: "sf_refresh",
+      account_type: "checking", currency: "USD", current_balance: 10, balance_date: balance_date
+    )
+    AccountProvider.create!(account: @account, provider: sfa)
+    @account.syncs.create!(status: "completed", completed_at: Time.current)
+
+    assert_equal balance_date, @account.reload.data_refreshed_at
+  end
+
+  test "data_refreshed_at falls back to the last completed sync for other providers" do
+    AccountProvider.create!(account: @account, provider: plaid_accounts(:one))
+    completed_at = 2.hours.ago.change(usec: 0)
+    @account.syncs.create!(status: "completed", completed_at: completed_at)
+
+    assert_equal completed_at, @account.reload.data_refreshed_at
+  end
 end

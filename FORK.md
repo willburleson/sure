@@ -30,6 +30,12 @@ sure.willburleson.com (deployed by the private `sure-oci` repo).
    (`RewardCard::Ranking`, simulating each bonus against the issuer rules). Offers come from
    `config/reward_bonuses.yml`, which is not in the image: sure-oci mounts it and refreshes it
    weekly from Doctor of Credit with one Haiku call (`RewardCard::Bonuses`).
+3. **Sidebar account rows** — each row reads institution / account name on the left and
+   balance / last refresh on the right (no subtype, no per-account sparkline; the group
+   header keeps its sparkline). "Last refresh" is `Account#data_refreshed_at`: SimpleFIN's
+   per-account `balance_date` (when the bank data actually updated), else the last completed
+   sync; manual accounts say "Manual". Formatted client-side (`refreshed_at_controller.js`)
+   because the sidebar is fragment-cached; older than 3 days turns red.
 
 ## Moving to a new upstream release
 
