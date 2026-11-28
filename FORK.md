@@ -36,6 +36,8 @@ sure.willburleson.com (deployed by the private `sure-oci` repo).
    per-account `balance_date` (when the bank data actually updated), else the last completed
    sync; manual accounts say "Manual". Formatted client-side (`refreshed_at_controller.js`)
    because the sidebar is fragment-cached; older than 3 days turns red.
+4. **Chrome 158 system-test fix** — cherry-pick of upstream `56559eb9c` (#5776), test-only.
+   Without it every system test errors in teardown. Drop it once the release tag includes it.
 
 ## Moving to a new upstream release
 
